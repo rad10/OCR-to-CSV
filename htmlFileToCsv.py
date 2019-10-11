@@ -1,6 +1,35 @@
+# import this library to automatically download and install the rest of the libraries if they do not exist
+import pip
+
+# if opencv isnt installed, itll install it for you
 from sys import argv
-from os import listdir, unlink
-from shutil import rmtree
+try:
+    import numpy as nm
+    import cv2
+except ImportError:
+    if(hasattr(pip, "main")):
+        pip.main(["install", "opencv-python"])
+    else:
+        pip._internal.main(["install", "opencv-python"])
+    import numpy as nm
+    import cv2
+try:
+    from PIL import Image
+except ImportError:
+    import Image
+
+# if tesseract isnt installed, itll install it for you
+try:
+    import pytesseract as tess
+except ImportError:
+    if(hasattr(pip, "main")):
+        pip.main(["install", "pytesseract"])
+    else:
+        pip._internal.main(["install", "pytesseract"])
+    import pytesseract as tess
+
+from tkinter import TK
+
 # Functions
 Debug = False
 
