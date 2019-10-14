@@ -61,26 +61,26 @@ def isNum(num):
     except:
         return False
 
-def checkHoriz(img, ind, height=1):
+def checkHoriz(img, ind, ratio=0.5, height=1):
     value = True
     for i in range(height):  # i increments by additional heights for thickness of border
         sum = 0
         for space in img[ind + i]:
-            if space > 0:
+            if space < 255:
                 sum += 1
         # will return false as soon as one thickness is not a border
-        value *= (sum > len(img)/2)
+        value *= (sum > int(len(img)*ratio))
     return value
 
 
-def checkVert(img, ind, width=1):
+def checkVert(img, ind, ratio=0.5, width=1):
     value = True
     for i in range(width):
         sum = 0
         for space in img:
-            if space[ind + i] > 0:
+            if space[ind + i] < 255:
                 sum += 1
-        value *= (sum > len(img)/2)
+        value *= (sum > int(len(img)*ratio))
     return value
 
 def help():
