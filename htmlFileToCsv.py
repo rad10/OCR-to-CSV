@@ -28,7 +28,7 @@ except ImportError:
         pip._internal.main(["install", "pytesseract"])
     import pytesseract as tess
 
-from tkinter import TK
+# from tkinter import TK
 
 # Functions
 Debug = False
@@ -61,6 +61,7 @@ def isNum(num):
     except:
         return False
 
+
 def checkHoriz(img, ind, ratio=0.5, height=1):
     value = True
     for i in range(height):  # i increments by additional heights for thickness of border
@@ -92,7 +93,7 @@ def absoluteValue(image):
 
 
 def help():
-    print(__file__, "[OPTION]","[HTML File]")
+    print(__file__, "[OPTION]", "[HTML File]")
     print("This program is intended to take data from inkspace HTML files and append it to a CSV file in the same directory.")
     print("INSTRUCTIONS: save inkspace output to an HTML file in the same directory as this program. Once done, run this program. Profit.")
     print("OPTIONS:")
@@ -128,13 +129,9 @@ def imageScraper(file=""):
 
     spreadsheet = image[boldHoriz[0]:boldHoriz[1], boldVert[0]:boldVert[1]]
     absSheet = spreadsheet.copy()
-    absSheet = absoluteValue(absSheet)
+    absSheet = absoluteValue(absSheet)  # get an absolute copy of spreadsheet
 
-    cv2.imshow("absoluteSheet", absSheet)
-    cv2.imshow("spreadsheet", spreadsheet)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-
+    # finding borders using the absolute value spreadsheet for accuracy
     for h in range(len(absSheet)):
         if checkHoriz(absSheet, h, 0.8):
             horizBorders.append(h+1)
@@ -142,6 +139,25 @@ def imageScraper(file=""):
         if checkVert(absSheet, w, 0.75):
             vertBorders.append(w+1)
 
+    ############################
+    # Time for actual Scraping #
+    ############################
+    dictionary = []  # the dictionary thatll hold all our information
+    currRow = -1
+    hb = horizBorders
+    vb = vertBorders
+    cv2.imshow("tableIndex", spreadsheet[hb[0]+1:hb[1]-1, vb[0]+1:vb[1]-1])
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    for row in range(len(horizBorders) - 1):
+        dictionary.append([])
+        currRow += 1
+        for col in range(len(vertBorders) - 1):
+            dictionary[row].append(tess.image_to_string(
+                spreadsheet[hb[row] + 1:hb[row + 1] - 1, vb[col] + 1:vb[col+1] - 1]))
+
+
+# imageScraper("dictTemplate.jpg")
 
 
 def arrayToCsv(directory):
@@ -185,4 +201,4 @@ def main():
     appendToFile("names.csv", output)
 
 
-main()
+# main()
