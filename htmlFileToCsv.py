@@ -101,31 +101,47 @@ def help():
 
 
 # Generator
-#### PHASE 1: manipulate image to clearly show tabs
+# PHASE 1: manipulate image to clearly show tabs
 def imageScraper(file=""):
-    if not (file.split(".") in ["jpg", "jpeg", "png"]):
+    if not (file.split(".")[1] in ["jpg", "jpeg", "png"]):
         return
     image = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
 
     spreadsheet = []
-    vertBorders = []  # array thatll have all points of borders
-    horizBorders = []
-    boldVert = [0, 0] # start and end
-    boldHoriz = [0, 0] # start and end
+    absSheet = []  # this will be a copy of spreadsheet, but with all values at abs for line detection
+    vertBorders = [-1]  # array thatll have all points of borders
+    horizBorders = [-1]
+    boldVert = [0, 0]  # start and end
+    boldHoriz = [0, 0]  # start and end
     # find borders
-    for h in range(len(image) - 4):
-        if checkHoriz(image, h, 4) and boldHoriz[0] > 0:
+    for h in range(len(image)-4):
+        if checkHoriz(image, h, 0.5, 4) and boldHoriz[0] > 0:
             boldHoriz[1] = h
-        elif checkHoriz(image, h, 4):
+        elif checkHoriz(image, h, 0.5, 4):
             boldHoriz[0] = h + 4
 
     for w in range(len(image[0]) - 4):
-        if checkVert(image, w, 4) and boldVert[0] > 0:
+        if checkVert(image, w, 0.5, 4) and boldVert[0] > 0:
             boldVert[1] = w
-        elif checkVert(image, w, 4):
+        elif checkVert(image, w, 0.5, 4):
             boldVert[0] = w + 4
 
     spreadsheet = image[boldHoriz[0]:boldHoriz[1], boldVert[0]:boldVert[1]]
+    absSheet = spreadsheet.copy()
+    absSheet = absoluteValue(absSheet)
+
+    cv2.imshow("absoluteSheet", absSheet)
+    cv2.imshow("spreadsheet", spreadsheet)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+    for h in range(len(absSheet)):
+        if checkHoriz(absSheet, h, 0.8):
+            horizBorders.append(h+1)
+    for w in range(len(absSheet[0])):
+        if checkVert(absSheet, w, 0.75):
+            vertBorders.append(w+1)
+
 
 
 def arrayToCsv(directory):
