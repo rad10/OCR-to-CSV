@@ -151,32 +151,11 @@ def main():
             if (i.split(".")[1].lower() == "html"):
                 input.append(i)
         #debug("argv: " + str(input))
-    if(len(input) == 0):
-        for i in listdir():
-            try:
-                if (i.split(".")[1] == "html"):
-                    input.append(i)
-            except:
-                continue
         #debug("listdir: " + str(input))
-    if(len(input)==0):
-        print("ERROR: No HTML Files imported and none in current directory!")
+    if(len(input) == 0):
         help()
         return
     output = ''
-    for i in input:
-        # debug(i+":"+i.split(".")[1].lower())
-        output += arrayToCsv(getContentArray(i))
-        try:
-            # deletes the html used as to not accidentally add it to csv again
-            unlink(i)
-        except:
-            True
-        try:  # incase the folder already doesnt exist
-            rmtree(str(i.split(".")[0] + "_files"))  # removes folder
-        except:
-            True
-    # debug(("output:",output))
     if(display):
         print(output)
     appendToFile("names.csv", output)
