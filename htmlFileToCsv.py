@@ -61,6 +61,17 @@ def isNum(num):
     except:
         return False
 
+def checkHoriz(img, ind, height=1):
+    value = True
+    for i in range(height):  # i increments by additional heights for thickness of border
+        sum = 0
+        for space in img[ind + i]:
+            if space > 0:
+                sum += 1
+        # will return false as soon as one thickness is not a border
+        value *= (sum > len(img)/2)
+    return value
+
 def help():
     print(__file__, "[OPTION]","[HTML File]")
     print("This program is intended to take data from inkspace HTML files and append it to a CSV file in the same directory.")
