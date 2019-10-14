@@ -72,6 +72,17 @@ def checkHoriz(img, ind, height=1):
         value *= (sum > len(img)/2)
     return value
 
+
+def checkVert(img, ind, width=1):
+    value = True
+    for i in range(width):
+        sum = 0
+        for space in img:
+            if space[ind + i] > 0:
+                sum += 1
+        value *= (sum > len(img)/2)
+    return value
+
 def help():
     print(__file__, "[OPTION]","[HTML File]")
     print("This program is intended to take data from inkspace HTML files and append it to a CSV file in the same directory.")
