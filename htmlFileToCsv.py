@@ -93,52 +93,31 @@ def help():
 
 
 # Generator
-def getContentArray(file):
-    """the purpose of the function is to take all the content in the HTML and return a matrix array.
-    file: a string containing the contents from a file given by readfile().
-    return: a string[][] matrix with important data scraped from file.
-    """
-    lines = readfile(file).split("\n")
-    #debug(("lines:", lines))
-    directory = []  # the matrix used to store conent
-    # all the content starts after the tag <textarea reeadonly="">
-    text = lines[2][lines[2].find("<textarea")+22:]
-    debug(("text", text))
-    # all the content makes a new line in the html, so this adds every line after <textarea>
-    for i in range(3, len(lines)):
-        if (text.find("</textarea>") == -1):
-            text = text + "\n" + lines[i]
-            debug(text)
-        else:
-            break  # once line has a </textarea>, it stops adding lines, but includes the line with </textarea>
-    # cuts out all info after </textarea>, then splits the new dictionary to define people and their attributes
-    people = text[:text.find("</textarea>")].split("\n")
-    debug(("people:", people))
-    for i in people:
-        # gets the attribute of each individual person and defines it by a space
-        attr = i.split(" ")
-        debug(("attr:", attr))
-        if (len(attr) >= 5):  # a person cannot have any more than 5 attributes, and if they do, they all merge into the last attribute
-            #                         FirstName, LastName, timeIn, timeOut, hours, purpose
-            directory.append([str(attr[0]+" "+attr[1]), attr[2], attr[3],
-                              attr[4], ''.join(str(x+" ") for x in attr[5:])])
-            directory[-1][4] = directory[-1][4][:len(directory[-1][4])-1]
-            # Comment top and uncomment bottom if you want first and last name separate
-            #directory.append([attr[0], attr[1], attr[2], attr[3], attr[4], ''.join(str(x+" ") for x in attr[5:])])
-            #directory[-1][5] = directory[-1][5][:len(directory[-1][5])-1]
-        elif (len(attr) > 1):  # this is added to deal with first and last name being together, in case someone only puts down their name
-            hold = []
-            # this combines the first and last name
-            hold.append(str(attr[0]+" "+attr[1]))
-            if (len(attr) > 2):  # if they did put in more than just their name, its added to attributes
-                for i in attr[2:]:
-                    hold.append(i)
-            # combines all the attributes into an array, then return to people array
-            directory.append(hold)
-        else:
-            directory.append(attr)
-        debug(("directory:", directory))
-    return directory  # returns the matrix
+#### PHASE 1: manipulate image to clearly show tabs
+def imageScraper(file=""):
+    if not (file.split(".") in ["jpg", "jpeg", "png"]):
+        return
+    image = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+
+    spreadsheet = []
+    vertBorders = []  # array thatll have all points of borders
+    horizBorders = []
+    boldVert = [0, 0] # start and end
+    boldHoriz = [0, 0] # start and end
+    # find borders
+    for h in range(len(image) - 4):
+        if checkHoriz(image, h, 4) and boldHoriz[0] > 0:
+            boldHoriz[1] = h
+        elif checkHoriz(image, h, 4):
+            boldHoriz[0] = h + 4
+
+    for w in range(len(image[0]) - 4):
+        if checkVert(image, w, 4) and boldVert[0] > 0:
+            boldVert[1] = w
+        elif checkVert(image, w, 4):
+            boldVert[0] = w + 4
+
+    spreadsheet = image[boldHoriz[0]:boldHoriz[1], boldVert[0]:boldVert[1]]
 
 
 def arrayToCsv(directory):
