@@ -56,3 +56,8 @@ namse.csv
 
 # Program file exclusions
 *.pyc
+
+tests/
+**/*.jpg
+**/*.png
+**/*.txt
