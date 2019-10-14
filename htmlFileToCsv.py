@@ -83,6 +83,14 @@ def checkVert(img, ind, ratio=0.5, width=1):
         value *= (sum > int(len(img)*ratio))
     return value
 
+
+def absoluteValue(image):
+    for row in range(len(image)):
+        for col in range(len(image[0])):
+            image[row][col] = 0 if (image[row][col] < 128) else 255
+    return image
+
+
 def help():
     print(__file__, "[OPTION]","[HTML File]")
     print("This program is intended to take data from inkspace HTML files and append it to a CSV file in the same directory.")
