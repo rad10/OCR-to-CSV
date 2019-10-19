@@ -117,53 +117,123 @@ def imageScraper(file=""):
     else:
     image = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
 
-    spreadsheet = []
-    absSheet = []  # this will be a copy of spreadsheet, but with all values at abs for line detection
-    vertBorders = [-1]  # array thatll have all points of borders
-    horizBorders = [-1]
-    boldVert = [0, 0]  # start and end
-    boldHoriz = [0, 0]  # start and end
-    # find borders
-    for h in range(len(image)-4):
-        if checkHoriz(image, h, 0.5, 4) and boldHoriz[0] > 0:
-            boldHoriz[1] = h
-        elif checkHoriz(image, h, 0.5, 4):
-            boldHoriz[0] = h + 4
+    # IMAGE Created
 
-    for w in range(len(image[0]) - 4):
-        if checkVert(image, w, 0.5, 4) and boldVert[0] > 0:
-            boldVert[1] = w
-        elif checkVert(image, w, 0.5, 4):
-            boldVert[0] = w + 4
+    # Adjusted form to remove filler on top of paper. isolates table for scanning
+    image = image[int(len(image) * 0.19):]
 
-    spreadsheet = image[boldHoriz[0]:boldHoriz[1], boldVert[0]:boldVert[1]]
-    absSheet = spreadsheet.copy()
-    absSheet = absoluteValue(absSheet)  # get an absolute copy of spreadsheet
+    # Grab absolute thresh of image
+    thresh = cv2.threshold(
+        image, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
+    invert = 255 - thresh
 
-    # finding borders using the absolute value spreadsheet for accuracy
-    for h in range(len(absSheet)):
-        if checkHoriz(absSheet, h, 0.8):
-            horizBorders.append(h+1)
-    for w in range(len(absSheet[0])):
-        if checkVert(absSheet, w, 0.75):
-            vertBorders.append(w+1)
+    #######################################
+    # Defining kernels for line detection #
+    #######################################
+    kernel_length = nm.array(image).shape[1]//80
+    verticle_kernel = cv2.getStructuringElement(
+        cv2.MORPH_RECT, (1, kernel_length))  # kernel for finding all verticle lines
+    # kernel for finding all horizontal lines
+    hori_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (kernel_length, 1))
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))  # 3x3 kernel
 
-    ############################
-    # Time for actual Scraping #
-    ############################
+    # Collecting Verticle Lines
+    verticleLines = cv2.erode(invert, verticle_kernel, iterations=3)
+    verticleLines = cv2.dilate(verticleLines, verticle_kernel, iterations=3)
+    verticleLines = cv2.threshold(
+        verticleLines, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
+    
+    # Collecting Horizontal Lines
+    horizontalLines = cv2.erode(invert, hori_kernel, iterations=3)
+    horizontalLines = cv2.dilate(horizontalLines, hori_kernel, iterations=3)
+    horizontalLines = cv2.threshold(horizontalLines, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
+
+    # Weighting parameters, this will decide the quantity of an image to be added to make a new image.
+    alpha = 0.5
+    beta = 1.0 - alpha
+
+    # combining verticle and horizontal lines. This gives us an empty table so that letters dont become boxes
+    blankTable = cv2.addWeighted(verticleLines, alpha, horizontalLines, beta, 0.0)
+    blankTable = cv2.erode(~blankTable, kernel, iterations=2)
+    blankTable = cv2.threshold(blankTable, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1] # sharpening new table
+
+    # Detecting all contours, which gives me all box positions
+    contours = cv2.findContours(blankTable, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0]
+
+    # Organizing contours
+    bboxes = [cv2.boundingRect(c) for c in contours] # we got our boxes, but its mostly to sort the contours
+    contours, bboxes = zip(*sorted(zip(contours, bboxes), key=lambda b: b[1][1], reverse=False)) # Sort all the contours in ascending order
+
+    contours = contours[2:] # Removed first two contours, which are just the whole page and the whole table
+
+    #########################################
+    # Phase 2: Collecting pairs for mapping #
+    #########################################
+    horizontalPairs = []
+    verticlePairs = []
+
+    # Collecting box pairs from contours
+    for c in contours:
+        x, y, w, h = cv2.boundingRect(c)
+        horizontalPairs.append((y, y+h))
+        verticlePairs.append((x, x+w))
+    horizontalPairs.sort()
+    verticlePairs.sort()
+
+    # Remove all duplicate and similiar points
+    i = 0
+    while i < len(horizontalPairs) - 1:
+        if(horizontalPairs[i] == horizontalPairs[i+1]): # remove exact duplicate coords
+            horizontalPairs.pop(i + 1)
+        elif (horizontalPairs[i][0] == horizontalPairs[i+1][0] and horizontalPairs[i][1] < horizontalPairs[i+1][1]):
+            horizontalPairs.pop(i + 1)
+        elif (horizontalPairs[i][0] == horizontalPairs[i+1][0] and horizontalPairs[i][1] > horizontalPairs[i+1][1]):
+            horizontalPairs.pop(i)
+        elif (horizontalPairs[i][1] == horizontalPairs[i+1][1] and horizontalPairs[i][0] < horizontalPairs[i+1][0]):
+            horizontalPairs.pop(i + 1)
+        elif (horizontalPairs[i][1] == horizontalPairs[i+1][1] and horizontalPairs[i][0] > horizontalPairs[i+1][0]):
+            horizontalPairs.pop(i)
+        elif(horizontalPairs[i][0]-5 < horizontalPairs[i+1][0] and horizontalPairs[i][0] + 5 > horizontalPairs[i+1][0]):
+            xpair1 = max(horizontalPairs[i][0], horizontalPairs[i+1][0])
+            xpair2 = min(horizontalPairs[i][1], horizontalPairs[i+1][1])
+            horizontalPairs[i] = (xpair1, xpair2)
+            horizontalPairs.pop(i+1)
+        else:
+            i += 1
+    i = 0
+    while(i < len(verticlePairs) - 1):
+        if(verticlePairs[i] == verticlePairs[i+1]): # remove exact duplicate coords
+            verticlePairs.pop(i+1)
+        elif (verticlePairs[i][0] == verticlePairs[i+1][0] and verticlePairs[i][1] < verticlePairs[i+1][1]):
+            verticlePairs.pop(i + 1)
+        elif (verticlePairs[i][0] == verticlePairs[i+1][0] and verticlePairs[i][1] > verticlePairs[i+1][1]):
+            verticlePairs.pop(i)
+        elif (verticlePairs[i][1] == verticlePairs[i+1][1] and verticlePairs[i][0] < verticlePairs[i+1][0]):
+            verticlePairs.pop(i + 1)
+        elif (verticlePairs[i][1] == verticlePairs[i+1][1] and verticlePairs[i][0] > verticlePairs[i+1][0]):
+            verticlePairs.pop(i)
+        elif(verticlePairs[i][0]-5 < verticlePairs[i+1][0] and verticlePairs[i][0] + 5 > verticlePairs[i+1][0]):
+            ypair1 = max(verticlePairs[i][0], verticlePairs[i+1][0])
+            ypair2 = min(verticlePairs[i][1], verticlePairs[i+1][1])
+            verticlePairs[i] = (ypair1, ypair2)
+            verticlePairs.pop(i+1)
+        else:
+            i += 1
+
+    #####################################
+    # Phase 3: Time for actual Scraping #
+    #####################################
     dictionary = []  # the dictionary thatll hold all our information
-    currRow = -1
-    hb = horizBorders
-    vb = vertBorders
-    cv2.imshow("tableIndex", spreadsheet[hb[0]+1:hb[1]-1, vb[0]+1:vb[1]-1])
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-    for row in range(len(horizBorders) - 1):
+    dictRow = 0
+    for row in horizontalPairs:
         dictionary.append([])
-        currRow += 1
-        for col in range(len(vertBorders) - 1):
-            dictionary[row].append(tess.image_to_string(
-                spreadsheet[hb[row] + 1:hb[row + 1] - 1, vb[col] + 1:vb[col+1] - 1]))
+        for col in verticlePairs:
+            dictionary[dictRow].append(image[row[0]:row[1], col[0]:col[1]])
+        dictRow += 1
+    
+    debug_output = "debugOutput/"
+    
+    return dictionary
 
 
 # imageScraper("dictTemplate.jpg")
