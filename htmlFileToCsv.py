@@ -104,8 +104,17 @@ def help():
 # Generator
 # PHASE 1: manipulate image to clearly show tabs
 def imageScraper(file=""):
-    if not (file.split(".")[1] in ["jpg", "jpeg", "png"]):
+    if not (file.split(".")[1] in ["jpg", "jpeg", "png", "pdf"]):
         return
+    elif not (os.path.exists(file)):
+        raise FileNotFoundError("File given does not exist.")
+    if file.split(".")[1] == "pdf":
+        from pdf2image import convert_from_path
+        image = convert_from_path(file)[0]
+        image = nm.array(image)
+        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    else:
     image = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
 
     spreadsheet = []
