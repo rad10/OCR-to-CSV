@@ -61,37 +61,6 @@ def isNum(num):
     except:
         return False
 
-
-def checkHoriz(img, ind, ratio=0.5, height=1):
-    value = True
-    for i in range(height):  # i increments by additional heights for thickness of border
-        sum = 0
-        for space in img[ind + i]:
-            if space < 255:
-                sum += 1
-        # will return false as soon as one thickness is not a border
-        value *= (sum > int(len(img)*ratio))
-    return value
-
-
-def checkVert(img, ind, ratio=0.5, width=1):
-    value = True
-    for i in range(width):
-        sum = 0
-        for space in img:
-            if space[ind + i] < 255:
-                sum += 1
-        value *= (sum > int(len(img)*ratio))
-    return value
-
-
-def absoluteValue(image):
-    for row in range(len(image)):
-        for col in range(len(image[0])):
-            image[row][col] = 0 if (image[row][col] < 128) else 255
-    return image
-
-
 def help():
     print(__file__, "[OPTION]", "[HTML File]")
     print("This program is intended to take data from inkspace HTML files and append it to a CSV file in the same directory.")
