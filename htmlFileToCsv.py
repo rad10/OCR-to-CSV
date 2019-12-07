@@ -1,8 +1,9 @@
 # import this library to automatically download and install the rest of the libraries if they do not exist
 import pip
 
-# if opencv isnt installed, itll install it for you
+# if opencv isnt installed, it'll install it for you
 from sys import argv
+import os
 try:
     import numpy as nm
     import cv2
@@ -27,6 +28,7 @@ except ImportError:
     else:
         pip._internal.main(["install", "pytesseract"])
     import pytesseract as tess
+tess.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract'
 
 # from tkinter import TK
 
