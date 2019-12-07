@@ -63,6 +63,7 @@ def isNum(num):
     except:
         return False
 
+
 def help():
     print(__file__, "[OPTION]", "[HTML File]")
     print("This program is intended to take data from inkspace HTML files and append it to a CSV file in the same directory.")
@@ -72,28 +73,9 @@ def help():
     print("-d | --display\t\t\tPrints the output of the CSV into the console as well as into the file.")
 
 
-# Generator
-# PHASE 1: manipulate image to clearly show tabs
-def imageScraper(file=""):
-    if not (file.split(".")[1] in ["jpg", "jpeg", "png", "pdf"]):
-        return
-    elif not (os.path.exists(file)):
-        raise FileNotFoundError("File given does not exist.")
-    if file.split(".")[1] == "pdf":
-        from pdf2image import convert_from_path
-        image = convert_from_path(file)[0]
-        image = nm.array(image)
-        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    else:
-    image = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
-
-    # IMAGE Created
-
-    # Adjusted form to remove filler on top of paper. isolates table for scanning
-    image = image[int(len(image) * 0.19):]
-
+def collectContours(image):
     # Grab absolute thresh of image
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     thresh = cv2.threshold(
         image, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
     invert = 255 - thresh
@@ -117,29 +99,93 @@ def imageScraper(file=""):
     # Collecting Horizontal Lines
     horizontalLines = cv2.erode(invert, hori_kernel, iterations=3)
     horizontalLines = cv2.dilate(horizontalLines, hori_kernel, iterations=3)
-    horizontalLines = cv2.threshold(horizontalLines, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
+    horizontalLines = cv2.threshold(
+        horizontalLines, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
 
     # Weighting parameters, this will decide the quantity of an image to be added to make a new image.
     alpha = 0.5
     beta = 1.0 - alpha
 
     # combining verticle and horizontal lines. This gives us an empty table so that letters dont become boxes
-    blankTable = cv2.addWeighted(verticleLines, alpha, horizontalLines, beta, 0.0)
+    blankTable = cv2.addWeighted(
+        verticleLines, alpha, horizontalLines, beta, 0.0)
     blankTable = cv2.erode(~blankTable, kernel, iterations=2)
-    blankTable = cv2.threshold(blankTable, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1] # sharpening new table
+    blankTable = cv2.threshold(blankTable, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[
+        1]  # sharpening new table
 
     # Detecting all contours, which gives me all box positions
-    contours = cv2.findContours(blankTable, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0]
+    contours = cv2.findContours(
+        blankTable, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0]
 
     # Organizing contours
-    bboxes = [cv2.boundingRect(c) for c in contours] # we got our boxes, but its mostly to sort the contours
-    contours, bboxes = zip(*sorted(zip(contours, bboxes), key=lambda b: b[1][1], reverse=False)) # Sort all the contours in ascending order
+    # we got our boxes, but its mostly to sort the contours
+    bboxes = [cv2.boundingRect(c) for c in contours]
+    # Sort all the contours in ascending order
+    contours, bboxes = zip(
+        *sorted(zip(contours, bboxes), key=lambda b: b[1][1], reverse=False))
+    return contours
 
-    contours = contours[2:] # Removed first two contours, which are just the whole page and the whole table
+# Generator
+# PHASE 1: manipulate image to clearly show tabs
+
+
+def imageScraper(file=""):
+    images = []
+    sheets = []  # an array with each index containing the output per page
+    if not (file.split(".")[1] in ["jpg", "jpeg", "png", "pdf"]):
+        return
+    elif not (os.path.exists(file)):
+        raise FileNotFoundError("File given does not exist.")
+    if file.split(".")[1] == "pdf":
+        from pdf2image import convert_from_path
+        for image in convert_from_path(file):
+            image = nm.array(image)
+            image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+            images.append(image)
+    else:
+        # , cv2.IMREAD_GRAYSCALE)
+        images.append(cv2.imread(file, cv2.COLOR_RGB2BGR))
+
+    for image in images:
+        contours = collectContours(image)
+        # // This is to tell which boxes correlate to the date
+        # Phase 1: Finding Main Boxes ##    // and which big box is the signin table
+        #################################
+        mainBoxes = []
+        for c in contours:
+            x, y, w, h = cv2.boundingRect(c)
+            if((h, w, 3) == image.shape):
+                continue
+            for m in mainBoxes:
+                if (x > m[0] and w < m[2]) or (y > m[1] and h < m[3]):
+                    break
+                elif(x <= m[0] and w >= m[2] and y <= m[1] and h >= m[3]):
+                    mainBoxes.remove(m)
+                    mainBoxes.append([x, y, w, h])
+            else:
+                mainBoxes.append([x, y, w, h])
+
+        table = mainBoxes[0]  # img that contains whole table
+        for x, y, w, h in mainBoxes:
+            if((w - x > table[2] - table[0]) or (h - y > table[3] - table[1])):
+                table = [x, y, w, h]
+        mainBoxes.remove(table)
+
+        # making images for date and day
+        sheets.append([])
+        for x, y, w, h in mainBoxes:
+            sheets[-1].append(image[y:y+h, x:x+w])
 
     #########################################
     # Phase 2: Collecting pairs for mapping #
     #########################################
+
+        # Collecting contours collected from table
+        table = image[table[1]-5:table[1]+table[3] +
+                      5, table[0]-5:table[0]+table[2]+5]
+        # removed first 2 as theyre the origional image and the table magnified
+        contours = collectContours(table)[2:]
+
     horizontalPairs = []
     verticlePairs = []
 
@@ -154,7 +200,8 @@ def imageScraper(file=""):
     # Remove all duplicate and similiar points
     i = 0
     while i < len(horizontalPairs) - 1:
-        if(horizontalPairs[i] == horizontalPairs[i+1]): # remove exact duplicate coords
+            # remove exact duplicate coords
+            if(horizontalPairs[i] == horizontalPairs[i+1]):
             horizontalPairs.pop(i + 1)
         elif (horizontalPairs[i][0] == horizontalPairs[i+1][0] and horizontalPairs[i][1] < horizontalPairs[i+1][1]):
             horizontalPairs.pop(i + 1)
@@ -173,7 +220,7 @@ def imageScraper(file=""):
             i += 1
     i = 0
     while(i < len(verticlePairs) - 1):
-        if(verticlePairs[i] == verticlePairs[i+1]): # remove exact duplicate coords
+            if(verticlePairs[i] == verticlePairs[i+1]):  # remove exact duplicate coords
             verticlePairs.pop(i+1)
         elif (verticlePairs[i][0] == verticlePairs[i+1][0] and verticlePairs[i][1] < verticlePairs[i+1][1]):
             verticlePairs.pop(i + 1)
@@ -190,6 +237,26 @@ def imageScraper(file=""):
             verticlePairs.pop(i+1)
         else:
             i += 1
+        # Removing pairs that collide with other pairs
+        for i in verticlePairs:
+            for j in verticlePairs:
+                if(i == j):
+                    continue
+                # Checks if any point is inside its bounds
+                if((i[0] <= j[0] and j[0] <= i[1]) or (i[0] <= j[1] and j[1] <= i[1])):
+                    if(i[1] - i[0] > j[1] - j[0]):  # compares and keeps the largest bounds
+                        verticlePairs.remove(j)
+                    else:
+                        verticlePairs.remove(i)
+        for i in horizontalPairs:
+            for j in horizontalPairs:
+                if(i == j):
+                    continue
+                if((i[0] <= j[0] and j[0] <= i[1]) or (i[0] <= j[1] and j[1] <= i[1])):
+                    if(i[1] - i[0] > j[1] - j[0]):
+                        horizontalPairs.remove(j)
+                    else:
+                        horizontalPairs.remove(i)
 
     #####################################
     # Phase 3: Time for actual Scraping #
@@ -199,12 +266,11 @@ def imageScraper(file=""):
     for row in horizontalPairs:
         dictionary.append([])
         for col in verticlePairs:
-            dictionary[dictRow].append(image[row[0]:row[1], col[0]:col[1]])
+                dictionary[dictRow].append(table[row[0]:row[1], col[0]:col[1]])
         dictRow += 1
     
-    debug_output = "debugOutput/"
-    
-    return dictionary
+        sheets[-1].append(dictionary)
+    return sheets
 
 
 # imageScraper("dictTemplate.jpg")
