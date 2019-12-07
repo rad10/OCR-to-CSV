@@ -61,3 +61,5 @@ tests/
 **/*.jpg
 **/*.png
 **/*.txt
+**/*.pdf
+**/*.doc*
