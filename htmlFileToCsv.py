@@ -274,8 +274,8 @@ def imageScraper(file=""):
 
 
 def compareKnownAliases(id, col):
-    names = [
-        [
+    names = {
+        1: [
             "nick c",
             "nick cottrell",
             "matthew magyar",
@@ -286,19 +286,16 @@ def compareKnownAliases(id, col):
             "emanuel bay",
             "malachi sorden"
         ],
-        "",
-        "",
-        "",
-        [
+        5: [
             "stem",
             "computer"
         ]
-    ]
+    }
     id = id.lower()
     closestMatch = ""
     mostMatches = 0
     matches = 0
-    for alias in names[col - 1]:
+    for alias in names[col]:
         matches = 0        
         for i in range(max(len(id), len(alias))):
             try:
@@ -342,48 +339,35 @@ def correctValue(image, column):
         #######################################
         ## Corrections for names and purpose ##
         #######################################
-        mistakes = [
-            ["^"],  # A
-            ["8", "|3", "/3", "\\3", "13", "&", "6"],  # B
-            ["(", "<", "{", "[", "¢", "©"],  # C G
-            # ["|]", "|)", "c|", "c/", "c\\"], # D d
-            ["3"],  # E
-            ["9"],  # g
-            # ["|-|", "+-+", "++", "4"], # H
-            ["1", "/", "\\", "|", "]", "["],  # I l
-            ["|<", "|(", "/<", "/(", "\\<", "\\(", "1<", "1("],  # K
-            ["0"],  # O
-            ["5", "$"],  # S
-            ["7"],  # T
-            ["VV"],  # W
-            ["><", ")("],  # X
-            ["2"]  # Z
-        ]
-        corrections = [
-            ["a"],
-            ["b"],
-            ["c"],  # , "g"],
-            ["d"],
-            ["e"],
-            ["g"],
-            ["h"],
-            ["i"],  # , "l"],
-            ["k"],
-            ["o"],
-            ["s"],
-            ["w"],
-            ["x"],
-            ["z"]
-        ]
+        alphaCorrections = {
+            "A": ["^"],  # A
+            "B": ["8", "|3", "/3", "\\3", "13", "&", "6"],  # B
+            "C": ["(", "<", "{", "[", "¢", "©"],  # C G
+            "G": ["(", "<", "{", "[", "¢", "©"],
+            # "D":["|]", "|)"],
+            # "d":["c|", "c/", "c\\"], # D d
+            "E": ["3"],  # E
+            "g": ["9"],  # g
+            # "H":["|-|", "+-+", "++", "4"], # H
+            "I": ["1", "/", "\\", "|", "]", "["],  # I l
+            "l": ["1", "/", "\\", "|", "]", "["],
+            # "K":["|<", "|(", "/<", "/(", "\\<", "\\(", "1<", "1("],  # K
+            "O": ["0"],  # O
+            "S": ["5", "$"],  # S
+            "T": ["7"],  # T
+            # "W":["VV"],  # W
+            # "X":["><", ")("],  # X
+            "Z": ["2"]  # Z
+        }
 
         template = ""
         additions = []
         for word in outputs:
             template = ""
             for char in range(len(word)):
-                for i in range(len(mistakes)):
-                    if word[char] in mistakes[i]:
-                        template += corrections[i][0]
+                for i in alphaCorrections:
+                    if word[char] in alphaCorrections[i]:
+                        template += i[0]
                         break
                 else:
                     template += word[char]
@@ -397,7 +381,6 @@ def correctValue(image, column):
         # creating new string based on similiar results
         result = ""
         charTray = []
-        error = 0
         largest = len(max(set(outputs), key=len))
         for i in range(largest):
             charTray.clear()
@@ -418,7 +401,7 @@ def correctValue(image, column):
                     pass
             result += max(set(charTray), key=charTray.count)
         outputs.append(result)
-        print(outputs)
+        # print(outputs)
 
         bestGuess = ""
         closestMatch = 0
@@ -430,12 +413,12 @@ def correctValue(image, column):
             guesses.append(compareKnownAliases(i, column))
         guesses.sort()
         guesses.append(("", 0))  # full stop to make searcher read last item
-        print(guesses)
+        # print(guesses)
         check = guesses[0][0]
 
         for i in guesses:
             if(i[0] != check):
-                print(check, accuracy, score, count)
+                # print(check, accuracy, score, count)
                 if(count > closestMatch):
                     closestMatch = count
                     accuracy = score
@@ -444,27 +427,28 @@ def correctValue(image, column):
                 check = i[0]
             score = max(score, i[1])
             count += 1
-        print(accuracy)
-        print(bestGuess)
+        # print(accuracy)
+        # print(bestGuess)
         if(accuracy >= len(bestGuess)/3 and len(bestGuess) <= largest):
-            print(bestGuess)
+            # print(bestGuess)
             return bestGuess
         else:
             return None
     
     if column in [2, 3, 4]:
-        digitCorrections = [
-            ["o", "Q"],  # 0
-            ["I", "l", "/", "\\", "|", "[", "]"],  # 1
-            ["z"],  # 2
-            ["3"],  # 3
-            ["h"],  # 4
-            ["s"],  # 5
-            ["b"],  # 6
-            ["t"],  # 7
-            ["B", "&"],  # 8
-            ["g", "q"]  # 9
-        ]
+        digitCorrections = {
+            0: ["o", "O", "Q"],  # 0
+            1: ["I", "l", "/", "\\", "|", "[", "]"],  # 1
+            2: ["z"],  # 2
+            3: ["3"],  # 3
+            4: ["h"],  # 4
+            5: ["s"],  # 5
+            6: ["b"],  # 6
+            7: ["t"],  # 7
+            8: ["B", "&"],  # 8
+            9: ["g", "q"]  # 9
+        }
+        print(outputs)
 
 
 
