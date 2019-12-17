@@ -273,7 +273,199 @@ def imageScraper(file=""):
     return sheets
 
 
-# imageScraper("dictTemplate.jpg")
+def compareKnownAliases(id, col):
+    names = [
+        [
+            "nick c",
+            "nick cottrell",
+            "matthew magyar",
+            "jason magyar",
+            "jayden gonzalez",
+            "zyon hall",
+            "julyus gonzalez",
+            "emanuel bay",
+            "malachi sorden"
+        ],
+        "",
+        "",
+        "",
+        [
+            "stem",
+            "computer"
+        ]
+    ]
+    id = id.lower()
+    closestMatch = ""
+    mostMatches = 0
+    matches = 0
+    for alias in names[col - 1]:
+        matches = 0        
+        for i in range(max(len(id), len(alias))):
+            try:
+                if(id[i] == alias[i]):
+                    matches += 1
+            except IndexError:
+                break
+        if (matches > mostMatches):
+            closestMatch = alias
+            mostMatches = matches
+    return closestMatch, mostMatches
+
+
+def correctValue(image, column):
+    outputs = []
+    # Get normal results
+    outputs.append(tess.image_to_string(image))
+
+    # Get black and white results
+    temp = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    outputs.append(tess.image_to_string(temp))
+
+    # get thresh results
+    temp = cv2.threshold(
+        temp, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
+    outputs.append(tess.image_to_string(temp))
+
+    # Using contrast for more values
+    for i in range(50):
+        temp = cv2.addWeighted(image, (1 + i/100), image, 0, 0)
+        outputs.append(tess.image_to_string(temp))
+    outputs.sort()
+    for i in range(len(outputs)-1, 1, -1):
+        if(outputs[i] == outputs[i-1]):
+            outputs.pop(i)
+    ##########################
+    ## APPLYING CORRECTIONS ##
+    ##########################
+
+    if column in [1, 5]:
+        #######################################
+        ## Corrections for names and purpose ##
+        #######################################
+        mistakes = [
+            ["^"],  # A
+            ["8", "|3", "/3", "\\3", "13", "&", "6"],  # B
+            ["(", "<", "{", "[", "¢", "©"],  # C G
+            # ["|]", "|)", "c|", "c/", "c\\"], # D d
+            ["3"],  # E
+            ["9"],  # g
+            # ["|-|", "+-+", "++", "4"], # H
+            ["1", "/", "\\", "|", "]", "["],  # I l
+            ["|<", "|(", "/<", "/(", "\\<", "\\(", "1<", "1("],  # K
+            ["0"],  # O
+            ["5", "$"],  # S
+            ["7"],  # T
+            ["VV"],  # W
+            ["><", ")("],  # X
+            ["2"]  # Z
+        ]
+        corrections = [
+            ["a"],
+            ["b"],
+            ["c"],  # , "g"],
+            ["d"],
+            ["e"],
+            ["g"],
+            ["h"],
+            ["i"],  # , "l"],
+            ["k"],
+            ["o"],
+            ["s"],
+            ["w"],
+            ["x"],
+            ["z"]
+        ]
+
+        template = ""
+        additions = []
+        for word in outputs:
+            template = ""
+            for char in range(len(word)):
+                for i in range(len(mistakes)):
+                    if word[char] in mistakes[i]:
+                        template += corrections[i][0]
+                        break
+                else:
+                    template += word[char]
+            additions.append(template)
+        outputs.extend(additions)
+        outputs.sort()
+        for i in range(len(outputs)-1, 1, -1):
+            if(outputs[i] == outputs[i-1]):
+                outputs.pop(i)
+
+        # creating new string based on similiar results
+        result = ""
+        charTray = []
+        error = 0
+        largest = len(max(set(outputs), key=len))
+        for i in range(largest):
+            charTray.clear()
+            for phrase in outputs:
+                try:
+                    charTray.append(phrase[i-1])
+                except:
+                    pass
+                try:
+                    # adds a strength towards the center
+                    charTray.extend(phrase[i]*2)
+                except:
+                    pass
+                try:
+                    charTray.append(phrase[i+1])
+                    # charTray.append(phrase[i+2])
+                except:
+                    pass
+            result += max(set(charTray), key=charTray.count)
+        outputs.append(result)
+        print(outputs)
+
+        bestGuess = ""
+        closestMatch = 0
+        accuracy = 0
+        score = 0
+        count = 0
+        guesses = []
+        for i in outputs:
+            guesses.append(compareKnownAliases(i, column))
+        guesses.sort()
+        guesses.append(("", 0))  # full stop to make searcher read last item
+        print(guesses)
+        check = guesses[0][0]
+
+        for i in guesses:
+            if(i[0] != check):
+                print(check, accuracy, score, count)
+                if(count > closestMatch):
+                    closestMatch = count
+                    accuracy = score
+                    bestGuess = check
+                score = count = 0
+                check = i[0]
+            score = max(score, i[1])
+            count += 1
+        print(accuracy)
+        print(bestGuess)
+        if(accuracy >= len(bestGuess)/3 and len(bestGuess) <= largest):
+            print(bestGuess)
+            return bestGuess
+        else:
+            return None
+    
+    if column in [2, 3, 4]:
+        digitCorrections = [
+            ["o", "Q"],  # 0
+            ["I", "l", "/", "\\", "|", "[", "]"],  # 1
+            ["z"],  # 2
+            ["3"],  # 3
+            ["h"],  # 4
+            ["s"],  # 5
+            ["b"],  # 6
+            ["t"],  # 7
+            ["B", "&"],  # 8
+            ["g", "q"]  # 9
+        ]
+
 
 
 def arrayToCsv(directory):
