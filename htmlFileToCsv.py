@@ -511,7 +511,8 @@ def requestCorrection(displayImage, col):
 
     # Setting up image to place in GUI
     image = Image.fromarray(displayImage)
-    image = ImageTK.photoImage(image)
+
+    image = ImageTk.PhotoImage(image)
 
     # setting values to labels in gui
     labelImage.configure(image=image)
