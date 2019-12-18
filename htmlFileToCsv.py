@@ -1,4 +1,6 @@
 # import this library to automatically download and install the rest of the libraries if they do not exist
+import tkinter
+from tkinter import filedialog, ttk
 import pip
 
 # if opencv isnt installed, it'll install it for you
@@ -15,9 +17,10 @@ except ImportError:
     import numpy as nm
     import cv2
 try:
-    from PIL import Image
+    from PIL import Image, ImageTk
 except ImportError:
     import Image
+    import ImageTk
 
 # if tesseract isnt installed, itll install it for you
 try:
@@ -30,7 +33,6 @@ except ImportError:
     import pytesseract as tess
 tess.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract'
 
-# from tkinter import TK
 
 # Functions
 Debug = False
@@ -477,7 +479,8 @@ def correctValue(image, column, threshhold=0.3):
         if column in [2, 3]:
         try:
             from time import strptime
-                strptime(bestGuess, "%H:%M") # will only return the best guess if the value is a valid time
+                # will only return the best guess if the value is a valid time
+                strptime(bestGuess, "%H:%M")
             return bestGuess
         except:
             return None
@@ -533,28 +536,94 @@ def arrayToCsv(directory):
     return (cvarray+"\n")
 
 
-# Actual Script
+# Gui Variables
+signinsheet = ""
+outputCSV = os.getenv("userprofile").replace(
+    "\\", "/") + "/Documents/signinSheetOutput.csv"
+
+# Gui Functions
+
+
+def reconfigOutput():
+    global outputCSV
+    global outputFile
+    outputCSV = filedialog.askopenfilename()
+    outputFile.configure(text=outputCSV.split("/")[-1])
+
+
 def main():
-    input = []
-    display = False  # Option to display results of CSV in console as well as names.csv
-    if len(argv) > 1:
-        for i in argv[1:]:
-            if (i == "/help" or i == "-help" or i == "==help" or i == "-h" or i == "/h"):
-                help()
-                return
-            elif (i == "/d"or i == "-d"or i == "/display"or i == "-display"or i == "--display"):
-                display = True
-            if (i.split(".")[1].lower() == "html"):
-                input.append(i)
-        #debug("argv: " + str(input))
-        #debug("listdir: " + str(input))
-    if(len(input) == 0):
-        help()
-        return
-    output = ''
-    if(display):
-        print(output)
-    appendToFile("names.csv", output)
+    global lineCorrection
 
 
-# main()
+if __name__ == "__main__":
+    root = tkinter.Tk(screenName="OCR To CSV Interpreter")
+    root.title("OCR To CSV Interpreter")
+    root.geometry("600x450+401+150")
+    root.configure(background="#d9d9d9")
+    root.minsize(120, 1)
+    root.maxsize(1370, 749)
+    root.resizable(1, 1)
+
+    inputFile = tkinter.Button(root, text="Select Signin Sheet")
+    inputFile.configure(activebackground="#ececec", activeforeground="#000000", background="#d9d9d9",
+                        disabledforeground="#a3a3a3", foreground="#000000", highlightbackground="#d9d9d9", highlightcolor="black", pady="0")
+    inputFile.place(relx=0.033, rely=0.044, height=34, width=157)
+
+    outputFile = tkinter.Button(
+        root, text=outputCSV.split("/")[-1], command=reconfigOutput)
+    outputFile.configure(activebackground="#ececec", activeforeground="#000000", background="#d9d9d9",
+                         disabledforeground="#a3a3a3", foreground="#000000", highlightbackground="#d9d9d9", highlightcolor="black", pady="0")
+    outputFile.place(relx=0.033, rely=0.156, height=34, width=157)
+
+    labelImage = tkinter.Label(root, text="No corrections required yet.")
+    labelImage.configure(background="#e6e6e6",
+                         disabledforeground="#a3a3a3", foreground="#000000")
+    labelImage.place(relx=0.417, rely=0.022, height=221, width=314)
+
+    errorLabel = tkinter.Label(root)
+    errorLabel.configure(activebackground="#f9f9f9", activeforeground="black", background="#e1e1e1",
+                         disabledforeground="#a3a3a3", foreground="#ff0000", highlightbackground="#d9d9d9", highlightcolor="black")
+    errorLabel.place(relx=0.017, rely=0.267, height=111, width=224)
+
+    confidenceDescription = tkinter.Label(root)
+    confidenceDescription.configure(activebackground="#f9f9f9", activeforeground="black", background="#d9d9d9",
+                                    disabledforeground="#a3a3a3", foreground="#000000", highlightbackground="#d9d9d9", highlightcolor="black")
+    confidenceDescription.place(relx=0.267, rely=0.556, height=31, width=164)
+
+    AIGuess = tkinter.Button(root, text="No guesses yet.")
+    AIGuess.configure(activebackground="#ececec", activeforeground="#000000", background="#d9d9d9",
+                      disabledforeground="#a3a3a3", foreground="#000000", highlightbackground="#d9d9d9", highlightcolor="black", pady="0")
+    AIGuess.place(relx=0.55, rely=0.556, height=34, width=227)
+
+    orLabel = tkinter.Label(root)
+    orLabel.configure(activebackground="#f9f9f9", activeforeground="black", background="#d9d9d9",
+                      disabledforeground="#a3a3a3", foreground="#000000", highlightbackground="#d9d9d9", highlightcolor="black")
+    orLabel.place(relx=0.017, rely=0.689, height=31, width=64)
+
+    correctionEntry = tkinter.Entry(root)
+    correctionEntry.configure(background="white", disabledforeground="#a3a3a3", font="TkFixedFont", foreground="#000000",
+                              highlightbackground="#d9d9d9", highlightcolor="black", insertbackground="black", selectbackground="#c4c4c4", selectforeground="black")
+    correctionEntry.place(relx=0.133, rely=0.689, height=30, relwidth=0.557)
+
+    submit = tkinter.Button(root, text="Submit")
+    submit.configure(activebackground="#ececec", activeforeground="#000000", background="#d9d9d9",
+                     disabledforeground="#a3a3a3", foreground="#000000", highlightbackground="#d9d9d9", highlightcolor="black", pady="0")
+    submit.place(relx=0.717, rely=0.689, height=34, width=127)
+
+    # Status bars
+    sheetStatus = tkinter.Label(root, text="Sheet: 0 of 0")
+    sheetStatus.configure(activebackground="#f9f9f9", activeforeground="black", background="#d9d9d9",
+                          disabledforeground="#a3a3a3", foreground="#000000", highlightbackground="#d9d9d9", highlightcolor="black")
+    sheetStatus.place(relx=0.017, rely=0.844, height=21, width=94)
+
+    rowStatus = tkinter.Label(root, text="Row: 0 of 0")
+    rowStatus.configure(activebackground="#f9f9f9", activeforeground="black", background="#d9d9d9",
+                        disabledforeground="#a3a3a3", foreground="#000000", highlightbackground="#d9d9d9", highlightcolor="black")
+    rowStatus.place(relx=0.217, rely=0.844, height=21, width=64)
+
+    progressBar = ttk.Progressbar(root)
+    progressBar.place(relx=0.017, rely=0.911, relwidth=0.95,
+                      relheight=0.0, height=22)
+
+    # Run main program
+    root.mainloop()
