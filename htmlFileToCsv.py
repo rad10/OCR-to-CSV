@@ -321,7 +321,7 @@ def compareKnownAliases(id, col):
     return closestMatch, mostMatches
 
 
-def correctValue(image, column):
+def correctValue(image, column, threshhold=0.3):
     outputs = []
     # Get normal results
     outputs.append(tess.image_to_string(image))
@@ -417,7 +417,7 @@ def correctValue(image, column):
             count += 1
         # print(accuracy)
         # print(bestGuess)
-        if(accuracy >= len(bestGuess)/3 and len(bestGuess) <= largest):
+        if(accuracy >= len(bestGuess)*threshold and len(bestGuess) <= largest):
             # print(bestGuess)
             return bestGuess
         else:
