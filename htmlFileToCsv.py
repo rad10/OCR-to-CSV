@@ -129,7 +129,7 @@ def collectContours(image):
 # PHASE 1: manipulate image to clearly show tabs
 
 
-def imageScraper(file=""):
+def imageScraper(file, outputArray=None):
     images = []
     sheets = []  # an array with each index containing the output per page
     if not (file.split(".")[1] in ["jpg", "jpeg", "png", "pdf"]):
@@ -270,7 +270,11 @@ def imageScraper(file=""):
         dictRow += 1
     
         sheets[-1].append(dictionary)
+    if(outputArray == None):
     return sheets
+    else:
+        globals()[outputArray] = sheets.copy()
+        return
 
 
 def compareKnownAliases(id, col):
