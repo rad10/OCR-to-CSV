@@ -583,16 +583,23 @@ def arrayToCsv(directory):
 signinsheet = ""
 outputCSV = os.getenv("userprofile").replace(
     "\\", "/") + "/Documents/signinSheetOutput.csv"
+submitButton = False
+guessButton = False
 
 # Gui Functions
-
-
 def reconfigOutput():
     global outputCSV
     global outputFile
     outputCSV = filedialog.askopenfilename()
     outputFile.configure(text=outputCSV.split("/")[-1])
 
+def guessSwitch():
+    global guessButton
+    guessButton = True
+
+def submitSwitch():
+    global submitButton
+    submitButton = True
 
 def main():
     global lineCorrection
@@ -633,7 +640,7 @@ if __name__ == "__main__":
                                     disabledforeground="#a3a3a3", foreground="#000000", highlightbackground="#d9d9d9", highlightcolor="black")
     confidenceDescription.place(relx=0.267, rely=0.556, height=31, width=164)
 
-    AIGuess = tkinter.Button(root, text="No guesses yet.")
+    AIGuess = tkinter.Button(root, text="No guesses yet.", command=guessSwitch)
     AIGuess.configure(activebackground="#ececec", activeforeground="#000000", background="#d9d9d9",
                       disabledforeground="#a3a3a3", foreground="#000000", highlightbackground="#d9d9d9", highlightcolor="black", pady="0")
     AIGuess.place(relx=0.55, rely=0.556, height=34, width=227)
@@ -648,7 +655,7 @@ if __name__ == "__main__":
                               highlightbackground="#d9d9d9", highlightcolor="black", insertbackground="black", selectbackground="#c4c4c4", selectforeground="black")
     correctionEntry.place(relx=0.133, rely=0.689, height=30, relwidth=0.557)
 
-    submit = tkinter.Button(root, text="Submit")
+    submit = tkinter.Button(root, text="Submit", command=submitSwitch)
     submit.configure(activebackground="#ececec", activeforeground="#000000", background="#d9d9d9",
                      disabledforeground="#a3a3a3", foreground="#000000", highlightbackground="#d9d9d9", highlightcolor="black", pady="0")
     submit.place(relx=0.717, rely=0.689, height=34, width=127)
