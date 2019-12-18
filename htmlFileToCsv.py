@@ -593,7 +593,8 @@ guessButton = False
 def reconfigOutput():
     global outputCSV
     global outputFile
-    outputCSV = filedialog.askopenfilename()
+    outputCSV = filedialog.askopenfilename(filetypes=(
+        ("Comma Style Values", "*.csv"), ("Comma Style Values", "*.csv")))
     outputFile.configure(text=outputCSV.split("/")[-1])
 
 def guessSwitch():
