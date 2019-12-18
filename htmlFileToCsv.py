@@ -601,6 +601,27 @@ def submitSwitch():
     global submitButton
     submitButton = True
 
+def popupTag(title, text, color="#000000"):
+    # Popup box for errors and completion
+    popupBox = tkinter.Tk()
+    popupBox.geometry("335x181+475+267")
+    popupBox.minsize(120, 1)
+    popupBox.maxsize(1370, 749)
+    popupBox.resizable(1, 1)
+    popupBox.configure(background="#d9d9d9")
+    popupBox.title = title
+
+    popupDescription = tkinter.Label(popupBox, text=text)
+    popupDescription.configure(
+        background="#ffffff", disabledforeground="#a3a3a3", foreground=color)
+    popupDescription.place(relx=0.03, rely=0.055, height=91, width=314)
+    popupOK = tkinter.Button(popupBox, text="OK", command=popupBox.destroy)
+    popupOK.configure(activebackground="#ececec", activeforeground="#000000", background="#ebebeb",
+                      disabledforeground="#a3a3a3", foreground="#000000", highlightbackground="#d9d9d9", highlightcolor="black", pady="0")
+    popupOK.place(relx=0.328, rely=0.663, height=34, width=117)
+    popupBox.mainloop()
+
+
 def main():
     global lineCorrection
 
