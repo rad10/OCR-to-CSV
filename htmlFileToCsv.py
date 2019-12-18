@@ -285,7 +285,15 @@ def imageScraper(file, outputArray=None):
         return
 
 
-def compareKnownAliases(id, col):
+def compareKnownAliases(id, col=1):
+    """Uses a dictionary of known valid aliases to find the most accurate guess for a name.\n
+    @param id: The string that you want a guess as what name it closest resembles.\n
+    @param col: the column of the string thats being checked. This is important as it clarifies 
+    whether its a name being searched or a purpose.\n
+    @return: it returns the name it believes closest resembles the string given and it will return 
+    the number of characters the string has in common with it. If the string matches with nothing, 
+    it will return ("", 0) but this is rare.
+    """
     names = {
         1: [
             "nick c",
@@ -322,6 +330,16 @@ def compareKnownAliases(id, col):
 
 
 def correctValue(image, column, threshhold=0.3):
+    """This function is how we get accurate values from the images in each dictionary.\n
+    @param {cvimg} image: The image that is being transcribed.\n
+    @param {int} column: The column in the table that the image is in. This is very important as its part of how the translator corrects the outputs.\n
+    @param {double} threshold: Optional variable. Changes the percentage of characters that need to match the origional of it to return. Higher threshholds mean more strict requirements and higher chance of getting nothing. Lower threshholds mean higher chance to get a value that may or may not be incorrect.\n
+    @returns: It will return the name that closest resembles the image, or it will return None if no name could be accepted.\n
+    It works by taking an image and running tesseract to get the value from the unchanges color image, then it grabs the ocr output from the same image with different effects, such as greyscale, thresholds, and contrast increase.\n
+    The next step for it is to take each unique value make, then run it through another function that creates a new string with the characters in it resembling what should be in there (no numbers or symbols in names, no chars in numbers, etc.) and adds it to the pile of strings.\n
+    The last step is for it take all the new unique strings and run them through another function to see which names the strings closest resemble. The name with the most conclusions is considered the best guess.\n
+    However, the best guess may not be accepted if the name doesnt share enough characters in common with all the guesses, then its scrapped and nothing is returned.
+    """
     outputs = []
     # Get normal results
     outputs.append(tess.image_to_string(image))
@@ -431,12 +449,15 @@ def correctValue(image, column, threshhold=0.3):
             4: ["h"],  # 4
             5: ["s"],  # 5
             6: ["b"],  # 6
-        7: ["t",")","}"],  # 7
+        7: ["t", ")", "}"],  # 7
             8: ["B", "&"],  # 8
         9: ["g", "q"],  # 9
         ":": ["'"]
         }
-    if column in [2, 3]:
+    if column in [2, 3, 4]:
+        ####################################
+        ## Corrections to Dates and Hours ##
+        ####################################
         template = ""
         additions = []
         for word in outputs:
@@ -456,15 +477,16 @@ def correctValue(image, column, threshhold=0.3):
         if column in [2, 3]:
         try:
             from time import strptime
-            strptime(bestGuess, "%H:%M")
+                strptime(bestGuess, "%H:%M") # will only return the best guess if the value is a valid time
             return bestGuess
         except:
             return None
         elif(column == 4):
             try:
+                # will only return the hours if theyre a valid time
                 return int(bestGuess)
             except:
-    return None
+                return ""  # This is the one exception to the errors The reason why is because we can calculate the hours if we have two valid times
     return None
 
 
