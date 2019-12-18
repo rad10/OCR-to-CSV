@@ -130,6 +130,14 @@ def collectContours(image):
 
 
 def imageScraper(file, outputArray=None):
+    """This function if phase 1 of the process. It starts by taking the image/pdf
+    of the signin sheet and breaks the table apart to isolate each value in the exact
+    order that they came in.\n
+    @param file: the image/pdf that needs to be scraped into its values.\n
+    @param outputArray: a parameter passed by reference due to the nature
+    of tkinters buttons. If the param is not filled, it will just return the result.\n
+    @return a multidimension array of images that containes the values of all the slots in the table.
+    """
     images = []
     sheets = []  # an array with each index containing the output per page
     if not (file.split(".")[1] in ["jpg", "jpeg", "png", "pdf"]):
