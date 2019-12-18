@@ -258,7 +258,7 @@ def imageScraper(file, outputArray=None):
                         verticlePairs.remove(j)
                     else:
                         verticlePairs.remove(i)
-                        break # needed in case i is removed to move to next iteration of i
+                        break  # needed in case i is removed to move to next iteration of i
         for i in horizontalPairs:
             for j in horizontalPairs:
                 if(i == j):
@@ -268,7 +268,7 @@ def imageScraper(file, outputArray=None):
                         horizontalPairs.remove(j)
                     else:
                         horizontalPairs.remove(i)
-                        break # needed in case i is removed to move to next iteration of i
+                        break  # needed in case i is removed to move to next iteration of i
 
     #####################################
     # Phase 3: Time for actual Scraping #
@@ -505,8 +505,9 @@ def requestCorrection(displayImage, col):
     global correctionEntry
     global submitButton
 
-    guess = correctValue(displayImage, col, 0.01) # The guess that should have barely any restriction
-    if (guess == None): # if the guess relates to LITERALLY nothing available
+    # The guess that should have barely any restriction
+    guess = correctValue(displayImage, col, 0.01)
+    if (guess == None):  # if the guess relates to LITERALLY nothing available
         guess = ""
 
     # Setting up image to place in GUI
@@ -517,12 +518,14 @@ def requestCorrection(displayImage, col):
     # setting values to labels in gui
     labelImage.configure(image=image)
     labelImage.image = image
-    errorLabel.configure(text="Uh oh. It looks like we couldnt\ncondifently decide who or what this is.\nWe need you to either confirm our guess\nor type in the correct value")
+    errorLabel.configure(
+        text="Uh oh. It looks like we couldnt\ncondifently decide who or what this is.\nWe need you to either confirm our guess\nor type in the correct value")
     confidenceDescription.configure(text="Were not confident, but is it:")
     AIGuess.configure(text=guess)
     orLabel.configure(text="or")
 
-    while not (guessButton or submitButton): # basically waits till user presses a button and changes variable scope
+    # basically waits till user presses a button and changes variable scope
+    while not (guessButton or submitButton):
         pass
 
     # Resetting changes made
@@ -540,7 +543,6 @@ def requestCorrection(displayImage, col):
         guessButton = False
         submitButton = False
         return correctionEntry.get()
-
 
 
 def TranslateDictionary(sheetsDict, outputDict=None):
@@ -590,6 +592,8 @@ submitButton = False
 guessButton = False
 
 # Gui Functions
+
+
 def reconfigOutput():
     global outputCSV
     global outputFile
@@ -597,13 +601,16 @@ def reconfigOutput():
         ("Comma Style Values", "*.csv"), ("Comma Style Values", "*.csv")))
     outputFile.configure(text=outputCSV.split("/")[-1])
 
+
 def guessSwitch():
     global guessButton
     guessButton = True
 
+
 def submitSwitch():
     global submitButton
     submitButton = True
+
 
 def popupTag(title, text, color="#000000"):
     # Popup box for errors and completion
@@ -639,7 +646,7 @@ if __name__ == "__main__":
     root.maxsize(1370, 749)
     root.resizable(1, 1)
 
-    inputFile = tkinter.Button(root, text="Select Signin Sheet")
+    inputFile = tkinter.Button(root, text="Select Signin Sheet", command=main)
     inputFile.configure(activebackground="#ececec", activeforeground="#000000", background="#d9d9d9",
                         disabledforeground="#a3a3a3", foreground="#000000", highlightbackground="#d9d9d9", highlightcolor="black", pady="0")
     inputFile.place(relx=0.033, rely=0.044, height=34, width=157)
