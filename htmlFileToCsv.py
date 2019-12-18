@@ -208,45 +208,45 @@ def imageScraper(file, outputArray=None):
     verticlePairs.sort()
 
     # Remove all duplicate and similiar points
-    i = 0
-    while i < len(horizontalPairs) - 1:
+    n = 0
+    while n < len(horizontalPairs) - 1:
         # remove exact duplicate coords
-        if(horizontalPairs[i] == horizontalPairs[i+1]):
-            horizontalPairs.pop(i + 1)
-        elif (horizontalPairs[i][0] == horizontalPairs[i+1][0] and horizontalPairs[i][1] < horizontalPairs[i+1][1]):
-            horizontalPairs.pop(i + 1)
-        elif (horizontalPairs[i][0] == horizontalPairs[i+1][0] and horizontalPairs[i][1] > horizontalPairs[i+1][1]):
-            horizontalPairs.pop(i)
-        elif (horizontalPairs[i][1] == horizontalPairs[i+1][1] and horizontalPairs[i][0] < horizontalPairs[i+1][0]):
-            horizontalPairs.pop(i + 1)
-        elif (horizontalPairs[i][1] == horizontalPairs[i+1][1] and horizontalPairs[i][0] > horizontalPairs[i+1][0]):
-            horizontalPairs.pop(i)
-        elif(horizontalPairs[i][0]-5 < horizontalPairs[i+1][0] and horizontalPairs[i][0] + 5 > horizontalPairs[i+1][0]):
-            xpair1 = max(horizontalPairs[i][0], horizontalPairs[i+1][0])
-            xpair2 = min(horizontalPairs[i][1], horizontalPairs[i+1][1])
-            horizontalPairs[i] = (xpair1, xpair2)
-            horizontalPairs.pop(i+1)
+        if(horizontalPairs[n] == horizontalPairs[n+1]):
+            horizontalPairs.pop(n + 1)
+        elif (horizontalPairs[n][0] == horizontalPairs[n+1][0] and horizontalPairs[n][1] < horizontalPairs[n+1][1]):
+            horizontalPairs.pop(n + 1)
+        elif (horizontalPairs[n][0] == horizontalPairs[n+1][0] and horizontalPairs[n][1] > horizontalPairs[n+1][1]):
+            horizontalPairs.pop(n)
+        elif (horizontalPairs[n][1] == horizontalPairs[n+1][1] and horizontalPairs[n][0] < horizontalPairs[n+1][0]):
+            horizontalPairs.pop(n + 1)
+        elif (horizontalPairs[n][1] == horizontalPairs[n+1][1] and horizontalPairs[n][0] > horizontalPairs[n+1][0]):
+            horizontalPairs.pop(n)
+        elif(horizontalPairs[n][0]-5 < horizontalPairs[n+1][0] and horizontalPairs[n][0] + 5 > horizontalPairs[n+1][0]):
+            xpair1 = max(horizontalPairs[n][0], horizontalPairs[n+1][0])
+            xpair2 = min(horizontalPairs[n][1], horizontalPairs[n+1][1])
+            horizontalPairs[n] = (xpair1, xpair2)
+            horizontalPairs.pop(n+1)
         else:
-            i += 1
-    i = 0
-    while(i < len(verticlePairs) - 1):
-        if(verticlePairs[i] == verticlePairs[i+1]):  # remove exact duplicate coords
-            verticlePairs.pop(i+1)
-        elif (verticlePairs[i][0] == verticlePairs[i+1][0] and verticlePairs[i][1] < verticlePairs[i+1][1]):
-            verticlePairs.pop(i + 1)
-        elif (verticlePairs[i][0] == verticlePairs[i+1][0] and verticlePairs[i][1] > verticlePairs[i+1][1]):
-            verticlePairs.pop(i)
-        elif (verticlePairs[i][1] == verticlePairs[i+1][1] and verticlePairs[i][0] < verticlePairs[i+1][0]):
-            verticlePairs.pop(i + 1)
-        elif (verticlePairs[i][1] == verticlePairs[i+1][1] and verticlePairs[i][0] > verticlePairs[i+1][0]):
-            verticlePairs.pop(i)
-        elif(verticlePairs[i][0]-5 < verticlePairs[i+1][0] and verticlePairs[i][0] + 5 > verticlePairs[i+1][0]):
-            ypair1 = max(verticlePairs[i][0], verticlePairs[i+1][0])
-            ypair2 = min(verticlePairs[i][1], verticlePairs[i+1][1])
-            verticlePairs[i] = (ypair1, ypair2)
-            verticlePairs.pop(i+1)
+            n += 1
+    n = 0
+    while(n < len(verticlePairs) - 1):
+        if(verticlePairs[n] == verticlePairs[n+1]):  # remove exact duplicate coords
+            verticlePairs.pop(n+1)
+        elif (verticlePairs[n][0] == verticlePairs[n+1][0] and verticlePairs[n][1] < verticlePairs[n+1][1]):
+            verticlePairs.pop(n + 1)
+        elif (verticlePairs[n][0] == verticlePairs[n+1][0] and verticlePairs[n][1] > verticlePairs[n+1][1]):
+            verticlePairs.pop(n)
+        elif (verticlePairs[n][1] == verticlePairs[n+1][1] and verticlePairs[n][0] < verticlePairs[n+1][0]):
+            verticlePairs.pop(n + 1)
+        elif (verticlePairs[n][1] == verticlePairs[n+1][1] and verticlePairs[n][0] > verticlePairs[n+1][0]):
+            verticlePairs.pop(n)
+        elif(verticlePairs[n][0]-5 < verticlePairs[n+1][0] and verticlePairs[n][0] + 5 > verticlePairs[n+1][0]):
+            ypair1 = max(verticlePairs[n][0], verticlePairs[n+1][0])
+            ypair2 = min(verticlePairs[n][1], verticlePairs[n+1][1])
+            verticlePairs[n] = (ypair1, ypair2)
+            verticlePairs.pop(n+1)
         else:
-            i += 1
+            n += 1
         # Removing pairs that collide with other pairs
         for i in verticlePairs:
             for j in verticlePairs:
