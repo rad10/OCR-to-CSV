@@ -258,6 +258,7 @@ def imageScraper(file, outputArray=None):
                         verticlePairs.remove(j)
                     else:
                         verticlePairs.remove(i)
+                        break # needed in case i is removed to move to next iteration of i
         for i in horizontalPairs:
             for j in horizontalPairs:
                 if(i == j):
@@ -267,6 +268,7 @@ def imageScraper(file, outputArray=None):
                         horizontalPairs.remove(j)
                     else:
                         horizontalPairs.remove(i)
+                        break # needed in case i is removed to move to next iteration of i
 
     #####################################
     # Phase 3: Time for actual Scraping #
