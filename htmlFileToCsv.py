@@ -441,12 +441,18 @@ def correctValue(image, column):
         outputs.sort()
 
         bestGuess = max(set(outputs), key=outputs.count)
+        if column in [2, 3]:
         try:
             from time import strptime
             strptime(bestGuess, "%H:%M")
             return bestGuess
         except:
             return None
+        elif(column == 4):
+            try:
+                return int(bestGuess)
+            except:
+    return None
     return None
 
 
