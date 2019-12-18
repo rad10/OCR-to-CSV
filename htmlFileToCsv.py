@@ -488,8 +488,8 @@ def correctValue(image, column, threshold=0.3):
                 return None
         elif(column == 4):
             try:
-                # will only return the hours if theyre a valid time
-                return int(bestGuess)
+                # will only return the hours if theyre a valid number
+                return str(int(bestGuess))
             except:
                 return ""  # This is the one exception to the errors The reason why is because we can calculate the hours if we have two valid times
     return None
