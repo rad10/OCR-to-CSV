@@ -210,8 +210,8 @@ def imageScraper(file, outputArray=None):
     # Remove all duplicate and similiar points
     i = 0
     while i < len(horizontalPairs) - 1:
-            # remove exact duplicate coords
-            if(horizontalPairs[i] == horizontalPairs[i+1]):
+        # remove exact duplicate coords
+        if(horizontalPairs[i] == horizontalPairs[i+1]):
             horizontalPairs.pop(i + 1)
         elif (horizontalPairs[i][0] == horizontalPairs[i+1][0] and horizontalPairs[i][1] < horizontalPairs[i+1][1]):
             horizontalPairs.pop(i + 1)
@@ -230,7 +230,7 @@ def imageScraper(file, outputArray=None):
             i += 1
     i = 0
     while(i < len(verticlePairs) - 1):
-            if(verticlePairs[i] == verticlePairs[i+1]):  # remove exact duplicate coords
+        if(verticlePairs[i] == verticlePairs[i+1]):  # remove exact duplicate coords
             verticlePairs.pop(i+1)
         elif (verticlePairs[i][0] == verticlePairs[i+1][0] and verticlePairs[i][1] < verticlePairs[i+1][1]):
             verticlePairs.pop(i + 1)
@@ -281,7 +281,7 @@ def imageScraper(file, outputArray=None):
     
         sheets[-1].append(dictionary)
     if(outputArray == None):
-    return sheets
+        return sheets
     else:
         globals()[outputArray] = sheets.copy()
         return
@@ -331,7 +331,7 @@ def compareKnownAliases(id, col=1):
     return closestMatch, mostMatches
 
 
-def correctValue(image, column, threshhold=0.3):
+def correctValue(image, column, threshold=0.3):
     """This function is how we get accurate values from the images in each dictionary.\n
     @param {cvimg} image: The image that is being transcribed.\n
     @param {int} column: The column in the table that the image is in. This is very important as its part of how the translator corrects the outputs.\n
@@ -477,13 +477,13 @@ def correctValue(image, column, threshhold=0.3):
 
         bestGuess = max(set(outputs), key=outputs.count)
         if column in [2, 3]:
-        try:
-            from time import strptime
+            try:
+                from time import strptime
                 # will only return the best guess if the value is a valid time
                 strptime(bestGuess, "%H:%M")
-            return bestGuess
-        except:
-            return None
+                return bestGuess
+            except:
+                return None
         elif(column == 4):
             try:
                 # will only return the hours if theyre a valid time
@@ -491,6 +491,7 @@ def correctValue(image, column, threshhold=0.3):
             except:
                 return ""  # This is the one exception to the errors The reason why is because we can calculate the hours if we have two valid times
     return None
+
 
 
 def requestCorrection(displayImage):
@@ -528,9 +529,9 @@ def arrayToCsv(directory):
     for i in range(len(directory)):
         for e in range(len(directory[i])-1):
             if (isNum(directory[i][e])):
-                cvarray += (directory[i][e]+", ")
+                cvarray += (directory[i][e]+",")
             else:
-                cvarray += (directory[i][e]+", ")
+                cvarray += (directory[i][e]+",")
         cvarray += (directory[i][-1]+"\n")
         debug(("cvarray["+str(i)+"]:", cvarray))
     return (cvarray+"\n")
