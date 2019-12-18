@@ -378,31 +378,7 @@ def correctValue(image, column):
             if(outputs[i] == outputs[i-1]):
                 outputs.pop(i)
 
-        # creating new string based on similiar results
-        result = ""
-        charTray = []
         largest = len(max(set(outputs), key=len))
-        for i in range(largest):
-            charTray.clear()
-            for phrase in outputs:
-                try:
-                    charTray.append(phrase[i-1])
-                except:
-                    pass
-                try:
-                    # adds a strength towards the center
-                    charTray.extend(phrase[i]*2)
-                except:
-                    pass
-                try:
-                    charTray.append(phrase[i+1])
-                    # charTray.append(phrase[i+2])
-                except:
-                    pass
-            result += max(set(charTray), key=charTray.count)
-        outputs.append(result)
-        # print(outputs)
-
         bestGuess = ""
         closestMatch = 0
         accuracy = 0
@@ -435,22 +411,43 @@ def correctValue(image, column):
         else:
             return None
     
-    if column in [2, 3, 4]:
         digitCorrections = {
             0: ["o", "O", "Q"],  # 0
-            1: ["I", "l", "/", "\\", "|", "[", "]"],  # 1
+        1: ["I", "l", "/", "\\", "|", "[", "]", ")"],  # 1
             2: ["z"],  # 2
             3: ["3"],  # 3
             4: ["h"],  # 4
             5: ["s"],  # 5
             6: ["b"],  # 6
-            7: ["t"],  # 7
+        7: ["t",")","}"],  # 7
             8: ["B", "&"],  # 8
-            9: ["g", "q"]  # 9
+        9: ["g", "q"],  # 9
+        ":": ["'"]
         }
-        print(outputs)
+    if column in [2, 3]:
+        template = ""
+        additions = []
+        for word in outputs:
+            template = ""
+            for char in range(len(word)):
+                for i in digitCorrections:
+                    if word[char] in digitCorrections[i]:
+                        template += str(i)
+                        break
+                else:
+                    template += word[char]
+            additions.append(template)
+        outputs.extend(additions)
+        outputs.sort()
 
-
+        bestGuess = max(set(outputs), key=outputs.count)
+        try:
+            from time import strptime
+            strptime(bestGuess, "%H:%M")
+            return bestGuess
+        except:
+            return None
+    return None
 
 def arrayToCsv(directory):
     """takes a matrix and returns a string in CSV format.
