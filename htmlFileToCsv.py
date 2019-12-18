@@ -449,6 +449,33 @@ def correctValue(image, column):
             return None
     return None
 
+
+def requestCorrection(displayImage):
+    return 1
+
+
+def TranslateDictionary(sheetsDict, outputDict=None):
+    results = []
+    for sheet in sheetsDict:
+        results.append([])
+        # | Full name | Time in | Time out | hours (possibly blank) | purpose | date | day (possibly blank) |
+        for row in sheet[-1][1:]:  # skips first row which is dummy
+            results[-1].append([])
+            for col in range(1, len(row)):  # skip first col which is dummy
+                temp = correctValue(row[col], col)
+                if(temp == None):  # the correction failed. the user must return the correction
+                    temp = requestCorrection(row[col])
+                results[-1][-1].append(temp)
+            for dates in sheet[:-1]:
+                # add the date and weekday to the end of every row
+                results[-1][1].append(tess.image_to_string(dates))
+    if(outputDict == None):
+        return results
+    else:
+        globals()[outputDict] = results.copy()
+        return
+
+
 def arrayToCsv(directory):
     """takes a matrix and returns a string in CSV format.
     var directory: a string[][] matrix that contains the information of people at the center.
