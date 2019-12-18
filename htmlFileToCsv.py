@@ -445,6 +445,10 @@ def correctValue(image, column, threshold=0.3):
         else:
             return None
     
+    elif column in [2, 3, 4]:
+        ####################################
+        ## Corrections to Dates and Hours ##
+        ####################################
         digitCorrections = {
             0: ["o", "O", "Q"],  # 0
         1: ["I", "l", "/", "\\", "|", "[", "]", ")"],  # 1
@@ -458,10 +462,6 @@ def correctValue(image, column, threshold=0.3):
         9: ["g", "q"],  # 9
         ":": ["'"]
         }
-    if column in [2, 3, 4]:
-        ####################################
-        ## Corrections to Dates and Hours ##
-        ####################################
         template = ""
         additions = []
         for word in outputs:
