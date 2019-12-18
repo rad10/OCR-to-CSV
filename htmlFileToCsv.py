@@ -493,9 +493,51 @@ def correctValue(image, column, threshold=0.3):
     return None
 
 
+def requestCorrection(displayImage, col):
+    global labelImage
+    global errorLabel
+    global confidenceDescription
+    global AIGuess
+    global guessButton
+    global orLabel
+    global correctionEntry
+    global submitButton
 
-def requestCorrection(displayImage):
-    return 1
+    guess = correctValue(displayImage, col, 0.01) # The guess that should have barely any restriction
+    if (guess == None): # if the guess relates to LITERALLY nothing available
+        guess = ""
+
+    # Setting up image to place in GUI
+    image = Image.fromarray(displayImage)
+    image = ImageTK.photoImage(image)
+
+    # setting values to labels in gui
+    labelImage.configure(image=image)
+    labelImage.image = image
+    errorLabel.configure(text="Uh oh. It looks like we couldnt\ncondifently decide who or what this is.\nWe need you to either confirm our guess\nor type in the correct value")
+    confidenceDescription.configure(text="Were not confident, but is it:")
+    AIGuess.configure(text=guess)
+    orLabel.configure(text="or")
+
+    while not (guessButton or submitButton): # basically waits till user presses a button and changes variable scope
+        pass
+
+    # Resetting changes made
+    labelImage.configure(image=None)
+    labelImage.image = None
+    errorLabel.configure(text=None)
+    confidenceDescription.configure(text=None)
+    AIGuess.configure(text=None)
+    orLabel.configure(text=None)
+    if(guessButton):
+        guessButton = False
+        submitButton = False
+        return guess
+    elif(submitButton):
+        guessButton = False
+        submitButton = False
+        return correctionEntry.get()
+
 
 
 def TranslateDictionary(sheetsDict, outputDict=None):
@@ -508,7 +550,7 @@ def TranslateDictionary(sheetsDict, outputDict=None):
             for col in range(1, len(row)):  # skip first col which is dummy
                 temp = correctValue(row[col], col)
                 if(temp == None):  # the correction failed. the user must return the correction
-                    temp = requestCorrection(row[col])
+                    temp = requestCorrection(row[col], col)
                 results[-1][-1].append(temp)
             for dates in sheet[:-1]:
                 # add the date and weekday to the end of every row
