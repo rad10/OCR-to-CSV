@@ -358,6 +358,9 @@ def correctValue(image, column, threshold=0.3):
         temp, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
     outputs.append(tess.image_to_string(temp))
 
+    if(max(set(outputs), key=outputs.count) == ""):
+        return "" # Skipping ahead if its already looking like theres nothing
+
     # Using contrast for more values
     for i in range(50):
         temp = cv2.addWeighted(image, (1 + i/100), image, 0, 0)
