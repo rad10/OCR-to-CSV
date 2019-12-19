@@ -635,7 +635,31 @@ def popupTag(title, text, color="#000000"):
 
 
 def main():
-    global lineCorrection
+    ##########################################
+    ## Phase 3: Hooking everything together ##
+    ##########################################
+    global signinsheet
+    global inputFile
+    global errorLabel
+
+    # try:
+    signinsheet = filedialog.askopenfilename(filetypes=(
+        ("PDF Files", "*.pdf"), ("Jpeg Files", "*.jpg"), ("Png Files", "*.png")))
+    inputFile.configure(text=signinsheet.split("/")[-1])
+    imageDictionary = imageScraper(signinsheet)
+    textDictionary = TranslateDictionary(imageDictionary, gui=True)
+    csvString = ""
+    for sheet in textDictionary:
+        csvString += arrayToCsv(sheet)
+    exportToFile(outputCSV, csvString)
+    errorLabel.configure(text="All finished.")
+    # except BaseException as e:
+    #     popupTag("Error", "Looks like something went wrong.\n"+str(e), "#ff0000")
+    #     print(str(e.args))
+    #     return
+    popupTag(
+        "Done", "Congrats! its all finished.\nLook at your csv and see if it looks alright.")
+    return
 
 
 if __name__ == "__main__":
