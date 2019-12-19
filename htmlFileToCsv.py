@@ -260,7 +260,7 @@ def imageScraper(file, outputArray=None):
         for col in verticlePairs:
                 dictionary[dictRow].append(table[row[0]:row[1], col[0]:col[1]])
         dictRow += 1
-    
+
     if(outputArray == None):
         return sheets
     else:
@@ -507,16 +507,20 @@ def requestCorrection(displayImage, col):
     orLabel.configure(text="or")
 
     # basically waits till user presses a button and changes variable scope
-    while not (guessButton or submitButton):
-        pass
+    root.update_idletasks()
+    root.wait_variable(decision)
 
     # Resetting changes made
     labelImage.configure(image=None)
     labelImage.image = None
-    errorLabel.configure(text=None)
-    confidenceDescription.configure(text=None)
-    AIGuess.configure(text=None)
-    orLabel.configure(text=None)
+    errorLabel.configure(text="")
+    confidenceDescription.configure(text="")
+    AIGuess.configure(text="")
+    orLabel.configure(text="")
+    correctionEntry.set("")
+    root.update_idletasks()
+    decision.set(0)
+
     if(guessButton):
         guessButton = False
         submitButton = False
@@ -556,6 +560,7 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
             if gui:
                 rowInd += 1
                 rowStatus.configure(text="Row: " + str(rowInd) + " of " + str(rowMax))
+                root.update_idletasks()
             results[-1].append([])
             for col in range(1, len(row)):  # skip first col which is dummy
                 temp = correctValue(row[col], col)
@@ -588,9 +593,8 @@ def arrayToCsv(directory):
 signinsheet = ""
 outputCSV = os.getenv("userprofile").replace(
     "\\", "/") + "/Documents/signinSheetOutput.csv"
-submitButton = False
 guessButton = False
-
+submitButton = False
 # Gui Functions
 
 
@@ -599,22 +603,25 @@ def reconfigOutput():
     global outputFile
     outputCSV = filedialog.askopenfilename(filetypes=(
         ("Comma Style Values", "*.csv"), ("Comma Style Values", "*.csv")))
-    outputFile.configure(text=outputCSV.split("/")[-1])
+    if(outputCSV != ""):
+        outputFile.configure(text=outputCSV.split("/")[-1])
 
 
 def guessSwitch():
     global guessButton
     guessButton = True
-
+    decision.set(1)
+    
 
 def submitSwitch():
     global submitButton
     submitButton = True
-
+    decision.set(1)
+    
 
 def popupTag(title, text, color="#000000"):
     # Popup box for errors and completion
-    popupBox = tkinter.Tk()
+    popupBox = tkinter.Toplevel()
     popupBox.geometry("335x181+475+267")
     popupBox.minsize(120, 1)
     popupBox.maxsize(1370, 749)
@@ -669,6 +676,8 @@ if __name__ == "__main__":
     root.minsize(120, 1)
     root.maxsize(1370, 749)
     root.resizable(1, 1)
+
+   decision = tkinter.BooleanVar()
 
     inputFile = tkinter.Button(root, text="Select Signin Sheet", command=main)
     inputFile.configure(activebackground="#ececec", activeforeground="#000000", background="#d9d9d9",
