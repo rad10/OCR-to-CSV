@@ -575,15 +575,16 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
             dates.append(tess.image_to_string(date))
         # | Full name | Time in | Time out | hours (possibly blank) | purpose | date | day (possibly blank) |
         for row in sheet[-1][1:]:  # skips first row which is dummy
+            if gui:
+                rowInd += 1
+                rowStatus.configure(text="Row: " + str(rowInd) + " of " + str(rowMax))
             results[-1].append([])
             for col in range(1, len(row)):  # skip first col which is dummy
                 temp = correctValue(row[col], col)
                 if(temp == None):  # the correction failed. the user must return the correction
                     temp = requestCorrection(row[col], col)
                 results[-1][-1].append(temp)
-            for dates in sheet[:-1]:
-                # add the date and weekday to the end of every row
-                results[-1][1].append(tess.image_to_string(dates))
+            results[-1][-1].extend(dates)
     if(outputDict == None):
         return results
     else:
