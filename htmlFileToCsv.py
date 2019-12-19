@@ -579,9 +579,6 @@ def arrayToCsv(directory):
     cvarray = ''
     for i in range(len(directory)):
         for e in range(len(directory[i])-1):
-            if (isNum(directory[i][e])):
-                cvarray += (directory[i][e]+",")
-            else:
                 cvarray += (directory[i][e]+",")
         cvarray += (directory[i][-1]+"\n")
         debug(("cvarray["+str(i)+"]:", cvarray))
