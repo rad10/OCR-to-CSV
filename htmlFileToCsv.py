@@ -273,7 +273,8 @@ def imageScraper(file, outputArray=None):
     #####################################
     # Phase 3: Time for actual Scraping #
     #####################################
-    dictionary = []  # the dictionary thatll hold all our information
+    sheets[-1].append([])
+    dictionary = sheets[-1][-1]  # the dictionary thatll hold all our information
     dictRow = 0
     for row in horizontalPairs:
         dictionary.append([])
