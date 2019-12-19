@@ -677,7 +677,7 @@ if __name__ == "__main__":
     root.maxsize(1370, 749)
     root.resizable(1, 1)
 
-   decision = tkinter.BooleanVar()
+    decision = tkinter.BooleanVar()
 
     inputFile = tkinter.Button(root, text="Select Signin Sheet", command=main)
     inputFile.configure(activebackground="#ececec", activeforeground="#000000", background="#d9d9d9",
