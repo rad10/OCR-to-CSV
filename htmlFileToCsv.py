@@ -261,7 +261,6 @@ def imageScraper(file, outputArray=None):
                 dictionary[dictRow].append(table[row[0]:row[1], col[0]:col[1]])
         dictRow += 1
     
-        sheets[-1].append(dictionary)
     if(outputArray == None):
         return sheets
     else:
