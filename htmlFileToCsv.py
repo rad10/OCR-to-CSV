@@ -549,10 +549,30 @@ def requestCorrection(displayImage, col):
         return correctionEntry.get()
 
 
-def TranslateDictionary(sheetsDict, outputDict=None):
+def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
     results = []
+    # GUI widgets to manipulate while in middle of function
+    if(gui):
+        global sheetStatus
+        global rowStatus
+        global progressBar
+        sheetMax = len(sheetsDict)
+        sheetInd=0
+        rowInd=0
+        progressMax = 0
+        progressInd = 0
+
     for sheet in sheetsDict:
         results.append([])
+        if gui:
+            sheetInd += 1
+            rowMax = len(sheet[-1]) - 1
+            sheetStatus.configure(text="Sheet: " + str(sheetInd) + " of " + str(sheetMax))
+
+        # Collecting dates on page first
+        dates = []
+        for date in sheet[:-1]:
+            dates.append(tess.image_to_string(date))
         # | Full name | Time in | Time out | hours (possibly blank) | purpose | date | day (possibly blank) |
         for row in sheet[-1][1:]:  # skips first row which is dummy
             results[-1].append([])
