@@ -43,10 +43,6 @@ def debug(content):
         print(content)
 
 
-def readfile(dir):
-    return open(dir, "r").read()
-
-
 def exportToFile(dir, content):
     open(dir, "w").write(content)
 
@@ -57,23 +53,6 @@ def appendToFile(dir, content):
         open(dir, "w").write(inside + content)
     except:
         open(dir, "w").write(content)
-
-
-def isNum(num):
-    try:
-        return float(str(num)).is_integer()
-    except:
-        return False
-
-
-def help():
-    print(__file__, "[OPTION]", "[HTML File]")
-    print("This program is intended to take data from inkspace HTML files and append it to a CSV file in the same directory.")
-    print("INSTRUCTIONS: save inkspace output to an HTML file in the same directory as this program. Once done, run this program. Profit.")
-    print("OPTIONS:")
-    print("-h | --help\t\t\tPrints this help screen.")
-    print("-d | --display\t\t\tPrints the output of the CSV into the console as well as into the file.")
-
 
 def collectContours(image):
     # Grab absolute thresh of image
