@@ -54,6 +54,7 @@ def appendToFile(dir, content):
     except:
         open(dir, "w").write(content)
 
+
 def collectContours(image):
     # Grab absolute thresh of image
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -253,7 +254,8 @@ def imageScraper(file, outputArray=None):
     # Phase 3: Time for actual Scraping #
     #####################################
     sheets[-1].append([])
-    dictionary = sheets[-1][-1]  # the dictionary thatll hold all our information
+    # the dictionary thatll hold all our information
+    dictionary = sheets[-1][-1]
     dictRow = 0
     for row in horizontalPairs:
         dictionary.append([])
@@ -337,7 +339,7 @@ def correctValue(image, column, threshold=0.3):
     outputs.append(tess.image_to_string(temp))
 
     if(max(set(outputs), key=outputs.count) == ""):
-        return "" # Skipping ahead if its already looking like theres nothing
+        return ""  # Skipping ahead if its already looking like theres nothing
 
     # Using contrast for more values
     for i in range(50):
@@ -539,8 +541,8 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
         global rowStatus
         global progressBar
         sheetMax = len(sheetsDict)
-        sheetInd=0
-        rowInd=0
+        sheetInd = 0
+        rowInd = 0
         progressMax = 0
         progressInd = 0
 
@@ -549,7 +551,8 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
         if gui:
             sheetInd += 1
             rowMax = len(sheet[-1]) - 1
-            sheetStatus.configure(text="Sheet: " + str(sheetInd) + " of " + str(sheetMax))
+            sheetStatus.configure(
+                text="Sheet: " + str(sheetInd) + " of " + str(sheetMax))
 
         # Collecting dates on page first
         dates = []
@@ -559,7 +562,8 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
         for row in sheet[-1][1:]:  # skips first row which is dummy
             if gui:
                 rowInd += 1
-                rowStatus.configure(text="Row: " + str(rowInd) + " of " + str(rowMax))
+                rowStatus.configure(
+                    text="Row: " + str(rowInd) + " of " + str(rowMax))
                 root.update_idletasks()
             results[-1].append([])
             for col in range(1, len(row)):  # skip first col which is dummy
