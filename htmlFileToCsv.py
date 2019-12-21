@@ -625,6 +625,9 @@ def submitSwitch():
 
 def popupTag(title, text, color="#000000"):
     # Popup box for errors and completion
+    def end():
+        popupBox.destroy()
+        root.destroy()
     popupBox = tkinter.Toplevel()
     popupBox.geometry("335x181+475+267")
     popupBox.minsize(120, 1)
@@ -633,11 +636,12 @@ def popupTag(title, text, color="#000000"):
     popupBox.configure(background="#d9d9d9")
     popupBox.title = title
 
-    popupDescription = tkinter.Label(popupBox, text=text)
-    popupDescription.configure(
-        background="#ffffff", disabledforeground="#a3a3a3", foreground=color)
+    popupDescription = tkinter.Text(popupBox)
+    popupDescription.insert("end", text)
+    popupDescription.configure(foreground=color, wrap="word", state="disabled", background="#FFFFFF", font="TkTextFont", highlightbackground="#d9d9d9", highlightcolor="black", insertbackground="black",
+                               selectbackground="#c4c4c4", selectforeground="black")
     popupDescription.place(relx=0.03, rely=0.055, height=91, width=314)
-    popupOK = tkinter.Button(popupBox, text="OK", command=popupBox.destroy)
+    popupOK = tkinter.Button(popupBox, text="OK", command=end)
     popupOK.configure(activebackground="#ececec", activeforeground="#000000", background="#ebebeb",
                       disabledforeground="#a3a3a3", foreground="#000000", highlightbackground="#d9d9d9", highlightcolor="black", pady="0")
     popupOK.place(relx=0.328, rely=0.663, height=34, width=117)
@@ -652,7 +656,7 @@ def main():
     global inputFile
     global errorLabel
 
-    # try:
+    try:
     signinsheet = filedialog.askopenfilename(filetypes=(
         ("PDF Files", "*.pdf"), ("Jpeg Files", "*.jpg"), ("Png Files", "*.png")))
     inputFile.configure(text=signinsheet.split("/")[-1])
@@ -663,10 +667,11 @@ def main():
         csvString += arrayToCsv(sheet)
     exportToFile(outputCSV, csvString)
     errorLabel.configure(text="All finished.")
-    # except BaseException as e:
-    #     popupTag("Error", "Looks like something went wrong.\n"+str(e), "#ff0000")
-    #     print(str(e.args))
-    #     return
+    except BaseException:
+        import traceback
+        popupTag("Error", "Looks like something went wrong.\n" +
+                 str(os.sys.exc_info())+"\n"+str(traceback.format_exc()), "#ff0000")
+        raise
     popupTag(
         "Done", "Congrats! its all finished.\nLook at your csv and see if it looks alright.")
     return
