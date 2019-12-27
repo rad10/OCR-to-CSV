@@ -43,6 +43,24 @@ def debug(content):
         print(content)
 
 
+def debugImageDictionary(diction):
+    if Debug:
+        debugOutput = "Sheet | SheetLen | TableRow | TableCol\n"
+        for sheet in range(len(diction)):
+            debugOutput += "{ind: 5d} | {slen: 8d} | {trow: 8d} | {tcol: 8d}\n".format(ind=sheet, slen=len(
+                diction[sheet]), trow=len(diction[sheet][-1]), tcol=len(diction[sheet][-1][0]))
+        print(debugOutput)
+        exportToFile("debugOutput/dictionaryStats.txt", debugOutput)
+        for sheet in range(len(diction)):
+            for dates in range(len(diction[sheet][:-1])):
+                cv2.imwrite("debugOutput/dictionary/sheet{sheet}date{date}.jpg".format(
+                    sheet=sheet, date=dates), diction[sheet][dates])
+            for row in range(len(diction[sheet][-1])):
+                for col in range(len(diction[sheet][-1][row])):
+                    cv2.imwrite("debugOutput/dictionary/sheet{sheet}table{row}{col}.jpg".format(
+                        sheet=sheet, row=row, col=col), diction[sheet][-1][row][col])
+
+
 def exportToFile(dir, content):
     open(dir, "w").write(content)
 
@@ -56,12 +74,18 @@ def appendToFile(dir, content):
 
 
 def collectContours(image):
+    debugIndex = 0
     # Grab absolute thresh of image
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     thresh = cv2.threshold(
         image, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
     invert = 255 - thresh
 
+    if Debug:
+        while(os.path.exists("debugOutput/scrapper/{ind}1invert.jpg".format(ind=debugIndex))):
+            debugIndex += 1
+        cv2.imwrite(
+            "debugOutput/scrapper/{ind}1invert.jpg".format(ind=debugIndex), invert)
     #######################################
     # Defining kernels for line detection #
     #######################################
@@ -78,11 +102,19 @@ def collectContours(image):
     verticleLines = cv2.threshold(
         verticleLines, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
     
+    if Debug:
+        cv2.imwrite(
+            "debugOutput/scrapper/{ind}2verticleLines.jpg".format(ind=debugIndex), verticleLines)
+
     # Collecting Horizontal Lines
     horizontalLines = cv2.erode(invert, hori_kernel, iterations=3)
     horizontalLines = cv2.dilate(horizontalLines, hori_kernel, iterations=3)
     horizontalLines = cv2.threshold(
         horizontalLines, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
+
+    if Debug:
+        cv2.imwrite(
+            "debugOutput/scrapper/{ind}3horizontalLines.jpg".format(ind=debugIndex), horizontalLines)
 
     # Weighting parameters, this will decide the quantity of an image to be added to make a new image.
     alpha = 0.5
@@ -95,6 +127,9 @@ def collectContours(image):
     blankTable = cv2.threshold(blankTable, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[
         1]  # sharpening new table
 
+    if Debug:
+        cv2.imwrite(
+            "debugOutput/scrapper/{ind}4blankTable.jpg".format(ind=debugIndex), blankTable)
     # Detecting all contours, which gives me all box positions
     contours = cv2.findContours(
         blankTable, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0]
@@ -122,6 +157,7 @@ def imageScraper(file, outputArray=None):
     """
     images = []
     sheets = []  # an array with each index containing the output per page
+    debugIndex = 0
     if not (file.split(".")[1] in ["jpg", "jpeg", "png", "pdf"]):
         return
     elif not (os.path.exists(file)):
@@ -173,6 +209,12 @@ def imageScraper(file, outputArray=None):
         # Collecting contours collected from table
         table = image[table[1]-5:table[1]+table[3] +
                       5, table[0]-5:table[0]+table[2]+5]
+
+        if Debug:
+            cv2.imwrite(
+                "debugOutput/scrapper/mainTable{image}.jpg".format(image=debugIndex), table)
+            debugIndex += 1
+
         # removed first 2 as theyre the origional image and the table magnified
         contours = collectContours(table)[2:]
 
@@ -261,6 +303,9 @@ def imageScraper(file, outputArray=None):
         dictionary.append([])
         for col in verticlePairs:
                 dictionary[dictRow].append(table[row[0]:row[1], col[0]:col[1]])
+            if Debug:
+                cv2.imwrite("debugOutput/dictionary/raw/table{}{}.jpg".format(dictRow,
+                                                                              col[1]-col[0]), table[row[0]:row[1], col[0]:col[1]])
         dictRow += 1
 
     if(outputArray == None):
@@ -661,6 +706,7 @@ def main():
         ("PDF Files", "*.pdf"), ("Jpeg Files", "*.jpg"), ("Png Files", "*.png")))
     inputFile.configure(text=signinsheet.split("/")[-1])
     imageDictionary = imageScraper(signinsheet)
+        debugImageDictionary(imageDictionary)
     textDictionary = TranslateDictionary(imageDictionary, gui=True)
     csvString = ""
     for sheet in textDictionary:
