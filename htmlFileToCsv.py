@@ -205,9 +205,9 @@ def imageScraper(file, outputArray=None):
         for x, y, w, h in mainBoxes:
             sheets[-1].append(image[y:y+h, x:x+w])
 
-    #########################################
-    # Phase 2: Collecting pairs for mapping #
-    #########################################
+        #########################################
+        # Phase 2: Collecting pairs for mapping #
+        #########################################
 
         # Collecting contours collected from table
         table = image[table[1]-5:table[1]+table[3] +
@@ -221,57 +221,57 @@ def imageScraper(file, outputArray=None):
         # removed first 2 as theyre the origional image and the table magnified
         contours = collectContours(table)[2:]
 
-    horizontalPairs = []
-    verticlePairs = []
+        horizontalPairs = []
+        verticlePairs = []
 
-    # Collecting box pairs from contours
-    for c in contours:
-        x, y, w, h = cv2.boundingRect(c)
-        horizontalPairs.append((y, y+h))
-        verticlePairs.append((x, x+w))
-    horizontalPairs.sort()
-    verticlePairs.sort()
+        # Collecting box pairs from contours
+        for c in contours:
+            x, y, w, h = cv2.boundingRect(c)
+            horizontalPairs.append((y, y+h))
+            verticlePairs.append((x, x+w))
+        horizontalPairs.sort()
+        verticlePairs.sort()
 
-    # Remove all duplicate and similiar points
-    n = 0
-    while n < len(horizontalPairs) - 1:
-        # remove exact duplicate coords
-        if(horizontalPairs[n] == horizontalPairs[n+1]):
-            horizontalPairs.pop(n + 1)
-        elif (horizontalPairs[n][0] == horizontalPairs[n+1][0] and horizontalPairs[n][1] < horizontalPairs[n+1][1]):
-            horizontalPairs.pop(n + 1)
-        elif (horizontalPairs[n][0] == horizontalPairs[n+1][0] and horizontalPairs[n][1] > horizontalPairs[n+1][1]):
-            horizontalPairs.pop(n)
-        elif (horizontalPairs[n][1] == horizontalPairs[n+1][1] and horizontalPairs[n][0] < horizontalPairs[n+1][0]):
-            horizontalPairs.pop(n + 1)
-        elif (horizontalPairs[n][1] == horizontalPairs[n+1][1] and horizontalPairs[n][0] > horizontalPairs[n+1][0]):
-            horizontalPairs.pop(n)
-        elif(horizontalPairs[n][0]-5 < horizontalPairs[n+1][0] and horizontalPairs[n][0] + 5 > horizontalPairs[n+1][0]):
-            xpair1 = max(horizontalPairs[n][0], horizontalPairs[n+1][0])
-            xpair2 = min(horizontalPairs[n][1], horizontalPairs[n+1][1])
-            horizontalPairs[n] = (xpair1, xpair2)
-            horizontalPairs.pop(n+1)
-        else:
-            n += 1
-    n = 0
-    while(n < len(verticlePairs) - 1):
-        if(verticlePairs[n] == verticlePairs[n+1]):  # remove exact duplicate coords
-            verticlePairs.pop(n+1)
-        elif (verticlePairs[n][0] == verticlePairs[n+1][0] and verticlePairs[n][1] < verticlePairs[n+1][1]):
-            verticlePairs.pop(n + 1)
-        elif (verticlePairs[n][0] == verticlePairs[n+1][0] and verticlePairs[n][1] > verticlePairs[n+1][1]):
-            verticlePairs.pop(n)
-        elif (verticlePairs[n][1] == verticlePairs[n+1][1] and verticlePairs[n][0] < verticlePairs[n+1][0]):
-            verticlePairs.pop(n + 1)
-        elif (verticlePairs[n][1] == verticlePairs[n+1][1] and verticlePairs[n][0] > verticlePairs[n+1][0]):
-            verticlePairs.pop(n)
-        elif(verticlePairs[n][0]-5 < verticlePairs[n+1][0] and verticlePairs[n][0] + 5 > verticlePairs[n+1][0]):
-            ypair1 = max(verticlePairs[n][0], verticlePairs[n+1][0])
-            ypair2 = min(verticlePairs[n][1], verticlePairs[n+1][1])
-            verticlePairs[n] = (ypair1, ypair2)
-            verticlePairs.pop(n+1)
-        else:
-            n += 1
+        # Remove all duplicate and similiar points
+        n = 0
+        while n < len(horizontalPairs) - 1:
+            # remove exact duplicate coords
+            if(horizontalPairs[n] == horizontalPairs[n+1]):
+                horizontalPairs.pop(n + 1)
+            elif (horizontalPairs[n][0] == horizontalPairs[n+1][0] and horizontalPairs[n][1] < horizontalPairs[n+1][1]):
+                horizontalPairs.pop(n + 1)
+            elif (horizontalPairs[n][0] == horizontalPairs[n+1][0] and horizontalPairs[n][1] > horizontalPairs[n+1][1]):
+                horizontalPairs.pop(n)
+            elif (horizontalPairs[n][1] == horizontalPairs[n+1][1] and horizontalPairs[n][0] < horizontalPairs[n+1][0]):
+                horizontalPairs.pop(n + 1)
+            elif (horizontalPairs[n][1] == horizontalPairs[n+1][1] and horizontalPairs[n][0] > horizontalPairs[n+1][0]):
+                horizontalPairs.pop(n)
+            elif(horizontalPairs[n][0]-5 < horizontalPairs[n+1][0] and horizontalPairs[n][0] + 5 > horizontalPairs[n+1][0]):
+                xpair1 = max(horizontalPairs[n][0], horizontalPairs[n+1][0])
+                xpair2 = min(horizontalPairs[n][1], horizontalPairs[n+1][1])
+                horizontalPairs[n] = (xpair1, xpair2)
+                horizontalPairs.pop(n+1)
+            else:
+                n += 1
+        n = 0
+        while(n < len(verticlePairs) - 1):
+            if(verticlePairs[n] == verticlePairs[n+1]):  # remove exact duplicate coords
+                verticlePairs.pop(n+1)
+            elif (verticlePairs[n][0] == verticlePairs[n+1][0] and verticlePairs[n][1] < verticlePairs[n+1][1]):
+                verticlePairs.pop(n + 1)
+            elif (verticlePairs[n][0] == verticlePairs[n+1][0] and verticlePairs[n][1] > verticlePairs[n+1][1]):
+                verticlePairs.pop(n)
+            elif (verticlePairs[n][1] == verticlePairs[n+1][1] and verticlePairs[n][0] < verticlePairs[n+1][0]):
+                verticlePairs.pop(n + 1)
+            elif (verticlePairs[n][1] == verticlePairs[n+1][1] and verticlePairs[n][0] > verticlePairs[n+1][0]):
+                verticlePairs.pop(n)
+            elif(verticlePairs[n][0]-5 < verticlePairs[n+1][0] and verticlePairs[n][0] + 5 > verticlePairs[n+1][0]):
+                ypair1 = max(verticlePairs[n][0], verticlePairs[n+1][0])
+                ypair2 = min(verticlePairs[n][1], verticlePairs[n+1][1])
+                verticlePairs[n] = (ypair1, ypair2)
+                verticlePairs.pop(n+1)
+            else:
+                n += 1
         # Removing pairs that collide with other pairs
         for i in verticlePairs:
             for j in verticlePairs:
@@ -295,21 +295,21 @@ def imageScraper(file, outputArray=None):
                         horizontalPairs.remove(i)
                         break  # needed in case i is removed to move to next iteration of i
 
-    #####################################
-    # Phase 3: Time for actual Scraping #
-    #####################################
-    sheets[-1].append([])
-    # the dictionary thatll hold all our information
-    dictionary = sheets[-1][-1]
-    dictRow = 0
-    for row in horizontalPairs:
-        dictionary.append([])
-        for col in verticlePairs:
+        #####################################
+        # Phase 3: Time for actual Scraping #
+        #####################################
+        sheets[-1].append([])
+        # the dictionary thatll hold all our information
+        dictionary = sheets[-1][-1]
+        dictRow = 0
+        for row in horizontalPairs:
+            dictionary.append([])
+            for col in verticlePairs:
                 dictionary[dictRow].append(table[row[0]:row[1], col[0]:col[1]])
-            if Debug:
-                cv2.imwrite("debugOutput/dictionary/raw/table{}{}.jpg".format(dictRow,
-                                                                              col[1]-col[0]), table[row[0]:row[1], col[0]:col[1]])
-        dictRow += 1
+                if Debug:
+                    cv2.imwrite("debugOutput/dictionary/raw/table{}{}.jpg".format(dictRow,
+                                                                                col[1]-col[0]), table[row[0]:row[1], col[0]:col[1]])
+            dictRow += 1
 
     if(outputArray == None):
         return sheets
@@ -716,17 +716,17 @@ def main():
     global errorLabel
 
     try:
-    signinsheet = filedialog.askopenfilename(filetypes=(
-        ("PDF Files", "*.pdf"), ("Jpeg Files", "*.jpg"), ("Png Files", "*.png")))
-    inputFile.configure(text=signinsheet.split("/")[-1])
-    imageDictionary = imageScraper(signinsheet)
+        signinsheet = filedialog.askopenfilename(filetypes=(
+            ("PDF Files", "*.pdf"), ("Jpeg Files", "*.jpg"), ("Png Files", "*.png")))
+        inputFile.configure(text=signinsheet.split("/")[-1])
+        imageDictionary = imageScraper(signinsheet)
         debugImageDictionary(imageDictionary)
-    textDictionary = TranslateDictionary(imageDictionary, gui=True)
-    csvString = ""
-    for sheet in textDictionary:
-        csvString += arrayToCsv(sheet)
-    exportToFile(outputCSV, csvString)
-    errorLabel.configure(text="All finished.")
+        textDictionary = TranslateDictionary(imageDictionary, gui=True)
+        csvString = ""
+        for sheet in textDictionary:
+            csvString += arrayToCsv(sheet)
+        exportToFile(outputCSV, csvString)
+        errorLabel.configure(text="All finished.")
     except BaseException:
         import traceback
         popupTag("Error", "Looks like something went wrong.\n" +
