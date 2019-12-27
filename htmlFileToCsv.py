@@ -462,8 +462,16 @@ def correctValue(image, column, threshold=0.3):
         temp, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
     outputs.append(tess.image_to_string(temp))
 
-    if(max(set(outputs), key=outputs.count) == ""):
-        return ""  # Skipping ahead if its already looking like theres nothing
+    if(max(set(outputs), key=outputs.count) == ""):  # quick check incase box is looking empty
+        invert = 255 - temp  # threshed image
+        # countnonzero only counts white pixels, so i need to invert to turn black pixels white
+        pixelCount = cv2.countNonZero(invert)
+        pixelTotal = temp.shape[0] * temp.shape[1]
+        # will only consider empty if image used less than 5% of pixels. yes, that small
+        if(pixelCount/pixelTotal <= 0.05):
+            return ""  # Skipping ahead if its already looking like theres nothing
+        else:
+            return None  # if theres enough pixels to describe a possbile image, then it isnt empty, but it cant read it
 
     # Using contrast for more values
     for i in range(50):
@@ -558,7 +566,7 @@ def correctValue(image, column, threshold=0.3):
         ## Corrections to Dates and Hours ##
         ####################################
         digitCorrections = {
-            0: ["o", "O", "Q", "C"],  # 0
+            0: ["o", "O", "Q", "C", "c"],  # 0
             1: ["I", "l", "/", "\\", "|", "[", "]", "(", ")"],  # 1
             2: ["z", "Z"],  # 2
             3: ["3", "E"],  # 3
@@ -603,13 +611,13 @@ def correctValue(image, column, threshold=0.3):
         outputs.extend(additions)
         outputs.sort()
 
-        correctFormat = [] # the array that will only take in outputs that fit formatting
+        correctFormat = []  # the array that will only take in outputs that fit formatting
         for word in outputs:
             if column in [2, 3] and bool(timeFilter.match(word)):
                 correctFormat.append(word)
             elif column == 4 and (word.isdigit() or word.isdecimal()):
                 correctFormat.append(word)
-        
+
         if (len(correctFormat) == 0):
             bestGuess = max(set(outputs), key=outputs.count)
         else:
@@ -647,7 +655,7 @@ def requestCorrection(displayImage, col):
     global correctionEntry
     global submitButton
 
-    result = "" # the string to be returned for final answer
+    result = ""  # the string to be returned for final answer
     # The guess that should have barely any restriction
     guess = correctValue(displayImage, col, 0.01)
     if (guess == None):  # if the guess relates to LITERALLY nothing available
