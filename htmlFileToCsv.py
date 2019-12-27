@@ -103,7 +103,7 @@ def collectContours(image):
     verticleLines = cv2.dilate(verticleLines, verticle_kernel, iterations=3)
     verticleLines = cv2.threshold(
         verticleLines, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
-    
+
     if Debug:
         cv2.imwrite(
             "debugOutput/scrapper/{ind}2verticleLines.jpg".format(ind=debugIndex), verticleLines)
@@ -308,7 +308,7 @@ def imageScraper(file, outputArray=None):
                 dictionary[dictRow].append(table[row[0]:row[1], col[0]:col[1]])
                 if Debug:
                     cv2.imwrite("debugOutput/dictionary/raw/table{}{}.jpg".format(dictRow,
-                                                                                col[1]-col[0]), table[row[0]:row[1], col[0]:col[1]])
+                                                                                  col[1]-col[0]), table[row[0]:row[1], col[0]:col[1]])
             dictRow += 1
 
     if(outputArray == None):
@@ -349,7 +349,7 @@ def compareKnownAliases(id, col=1):
     mostMatches = 0
     matches = 0
     for alias in names[col]:
-        matches = 0        
+        matches = 0
         for i in range(max(len(id), len(alias))):
             try:
                 if(id[i] == alias[i]):
@@ -476,23 +476,23 @@ def correctValue(image, column, threshold=0.3):
             return bestGuess
         else:
             return None
-    
+
     elif column in [2, 3, 4]:
         ####################################
         ## Corrections to Dates and Hours ##
         ####################################
         digitCorrections = {
             0: ["o", "O", "Q"],  # 0
-        1: ["I", "l", "/", "\\", "|", "[", "]", ")"],  # 1
+            1: ["I", "l", "/", "\\", "|", "[", "]", ")"],  # 1
             2: ["z"],  # 2
             3: ["3"],  # 3
             4: ["h"],  # 4
             5: ["s"],  # 5
             6: ["b"],  # 6
-        7: ["t", ")", "}"],  # 7
+            7: ["t", ")", "}"],  # 7
             8: ["B", "&"],  # 8
-        9: ["g", "q"],  # 9
-        ":": ["'"]
+            9: ["g", "q"],  # 9
+            ":": ["'"]
         }
         template = ""
         additions = []
@@ -644,7 +644,7 @@ def arrayToCsv(directory):
     cvarray = ''
     for i in range(len(directory)):
         for e in range(len(directory[i])-1):
-                cvarray += (directory[i][e]+",")
+            cvarray += (directory[i][e]+",")
         cvarray += (directory[i][-1]+"\n")
         debug(("cvarray["+str(i)+"]:", cvarray))
     return (cvarray+"\n")
@@ -672,7 +672,7 @@ def guessSwitch():
     global guessButton
     guessButton = True
     decision.set(1)
-    
+
 
 def submitSwitch(event=None):
     global submitButton
@@ -680,7 +680,7 @@ def submitSwitch(event=None):
         return
     submitButton = True
     decision.set(1)
-    
+
 
 def popupTag(title, text, color="#000000"):
     # Popup box for errors and completion
