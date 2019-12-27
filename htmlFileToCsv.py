@@ -2,6 +2,8 @@
 import tkinter
 from tkinter import filedialog, ttk
 import pip
+from math import floor
+from time import sleep
 
 # if opencv isnt installed, it'll install it for you
 from sys import argv
@@ -192,6 +194,7 @@ def imageScraper(file, outputArray=None):
                 mainBoxes.append([x, y, w, h])
 
         table = mainBoxes[0]  # img that contains whole table
+
         for x, y, w, h in mainBoxes:
             if((w - x > table[2] - table[0]) or (h - y > table[3] - table[1])):
                 table = [x, y, w, h]
@@ -541,14 +544,18 @@ def requestCorrection(displayImage, col):
 
     # Setting up image to place in GUI
     image = Image.fromarray(displayImage)
-
+    if(displayImage.shape[1] > labelImage.winfo_width()):
+        hgt, wth = displayImage.shape[:2]
+        ratio = labelImage.winfo_width()/wth
+        image = image.resize(
+            (floor(wth * ratio), floor(hgt * ratio)), Image.ANTIALIAS)
     image = ImageTk.PhotoImage(image)
 
     # setting values to labels in gui
     labelImage.configure(image=image)
     labelImage.image = image
     errorLabel.configure(
-        text="Uh oh. It looks like we couldnt\ncondifently decide who or what this is.\nWe need you to either confirm our guess\nor type in the correct value")
+        text="Uh oh. It looks like we couldnt condifently decide who or what this is. We need you to either confirm our guess or type in the correct value")
     confidenceDescription.configure(text="Were not confident, but is it:")
     AIGuess.configure(text=guess)
     orLabel.configure(text="or")
@@ -564,8 +571,9 @@ def requestCorrection(displayImage, col):
     confidenceDescription.configure(text="")
     AIGuess.configure(text="")
     orLabel.configure(text="")
-    correctionEntry.set("")
+    correctionEntry.delete(0, "end")
     root.update_idletasks()
+    sleep(1)
     decision.set(0)
 
     if(guessButton):
@@ -588,9 +596,12 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
         sheetMax = len(sheetsDict)
         sheetInd = 0
         rowInd = 0
-        progressMax = 0
-        progressInd = 0
+        progressMax = 1
 
+        # Getting max for progress bar
+        for sheet in sheetsDict:
+            progressMax += len(sheet[-1]) - 1
+        progressBar.configure(mode="determinate", maximum=progressMax)
     for sheet in sheetsDict:
         results.append([])
         if gui:
@@ -607,6 +618,7 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
         for row in sheet[-1][1:]:  # skips first row which is dummy
             if gui:
                 rowInd += 1
+                progressBar.step()
                 rowStatus.configure(
                     text="Row: " + str(rowInd) + " of " + str(rowMax))
                 root.update_idletasks()
@@ -662,8 +674,10 @@ def guessSwitch():
     decision.set(1)
     
 
-def submitSwitch():
+def submitSwitch(event=None):
     global submitButton
+    if(event != None and correctionEntry.get() == ""):
+        return
     submitButton = True
     decision.set(1)
     
@@ -751,7 +765,7 @@ if __name__ == "__main__":
     labelImage.place(relx=0.417, rely=0.022, height=221, width=314)
 
     errorLabel = tkinter.Label(root)
-    errorLabel.configure(activebackground="#f9f9f9", activeforeground="black", background="#e1e1e1",
+    errorLabel.configure(wraplength=224, activebackground="#f9f9f9", activeforeground="black", background="#e1e1e1",
                          disabledforeground="#a3a3a3", foreground="#ff0000", highlightbackground="#d9d9d9", highlightcolor="black")
     errorLabel.place(relx=0.017, rely=0.267, height=111, width=224)
 
@@ -779,6 +793,7 @@ if __name__ == "__main__":
     submit.configure(activebackground="#ececec", activeforeground="#000000", background="#d9d9d9",
                      disabledforeground="#a3a3a3", foreground="#000000", highlightbackground="#d9d9d9", highlightcolor="black", pady="0")
     submit.place(relx=0.717, rely=0.689, height=34, width=127)
+    root.bind("<Return>", submitSwitch)
 
     # Status bars
     sheetStatus = tkinter.Label(root, text="Sheet: 0 of 0")
