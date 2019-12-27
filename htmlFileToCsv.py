@@ -271,10 +271,6 @@ def imageScraper(file, outputArray=None):
 
         if Debug:
             print("Debug VerticlePairs:", verticlePairs)
-        # this is the gap before the table from the left side
-        verticlePairs.pop(0)
-        # this is the gap after the table from the right side
-        verticlePairs.pop(-1)
 
         # Fixing overlapping of some pairs
         for v in range(len(verticlePairs) - 1):
@@ -284,6 +280,11 @@ def imageScraper(file, outputArray=None):
                 verticlePairs[v] = (verticlePairs[v][0],
                                     verticlePairs[v + 1][0])
                 verticlePairs[v + 1] = (temp, verticlePairs[v + 1][1])
+
+        # this is the gap before the table from the left side
+        verticlePairs.pop(0)
+        # this is the gap after the table from the right side
+        verticlePairs.pop(-1)
 
         if Debug:
             print("Debug VerticlePairs:", verticlePairs)
@@ -343,10 +344,6 @@ def imageScraper(file, outputArray=None):
 
         if Debug:
             print("Debug HorizontalPairs:", horizontalPairs)
-        # this is the gap before the table from the left side
-        horizontalPairs.pop(0)
-        # this is the gap after the table from the right side
-        horizontalPairs.pop(-1)
 
         # Fixing overlapping of some pairs
         for h in range(len(horizontalPairs) - 1):
@@ -356,6 +353,11 @@ def imageScraper(file, outputArray=None):
                 horizontalPairs[h] = (
                     horizontalPairs[h][0], horizontalPairs[h + 1][0])
                 horizontalPairs[h + 1] = (temp, horizontalPairs[h + 1][1])
+
+        # this is the gap before the table from the left side
+        horizontalPairs.pop(0)
+        # this is the gap after the table from the right side
+        horizontalPairs.pop(-1)
 
         if Debug:
             print("Debug HorizontalPairs:", horizontalPairs)
