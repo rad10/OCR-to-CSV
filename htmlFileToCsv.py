@@ -4,6 +4,7 @@ from tkinter import filedialog, ttk
 import pip
 from math import floor
 from time import sleep
+import re
 
 # if opencv isnt installed, it'll install it for you
 from sys import argv
@@ -557,21 +558,35 @@ def correctValue(image, column, threshold=0.3):
         ## Corrections to Dates and Hours ##
         ####################################
         digitCorrections = {
-            0: ["o", "O", "Q"],  # 0
-            1: ["I", "l", "/", "\\", "|", "[", "]", ")"],  # 1
-            2: ["z"],  # 2
-            3: ["3"],  # 3
-            4: ["h"],  # 4
-            5: ["s"],  # 5
-            6: ["b"],  # 6
+            0: ["o", "O", "Q", "C"],  # 0
+            1: ["I", "l", "/", "\\", "|", "[", "]", "(", ")"],  # 1
+            2: ["z", "Z"],  # 2
+            3: ["3", "E"],  # 3
+            4: ["h", "y", "A"],  # 4
+            5: ["s", "S"],  # 5
+            6: ["b", "e"],  # 6
             7: ["t", ")", "}"],  # 7
             8: ["B", "&"],  # 8
             9: ["g", "q"],  # 9
-            ":": ["'"]
+            ":": ["'", ".", ","]
         }
+        if column in [2, 3]:
+            # Source for regex string http://regexlib.com/DisplayPatterns.aspx?cattabindex=4&categoryId=5&AspxAutoDetectCookieSupport=1
+            timeFilter = re.compile(
+                r'^((([0]?[1-9]|1[0-2])(:|\.)[0-5][0-9]((:|\.)[0-5][0-9])?( )?(AM|am|aM|Am|PM|pm|pM|Pm))|(([0]?[0-9]|1[0-9]|2[0-3])(:|\.)[0-5][0-9]((:|\.)[0-5][0-9])?))$')
+
         template = ""
         additions = []
         for word in outputs:
+            if column in [2, 3] and bool(timeFilter.match(word)):
+                continue
+            if column in [2, 3] and word.isdigit():
+                if(len(word) >= 3 and len(word) <= 6):
+                    template = word
+                    for i in range(len(template) - 2, 0, -2):
+                        template = template[:i] + ":" + template[i:]
+                    additions.append(template)
+                    continue
             template = ""
             for char in range(len(word)):
                 for i in digitCorrections:
@@ -580,24 +595,44 @@ def correctValue(image, column, threshold=0.3):
                         break
                 else:
                     template += word[char]
+            if column in [2, 3] and template.isdigit():
+                if(len(word) >= 3 and len(word) <= 6):
+                    for i in range(len(template) - 2, 0, -2):
+                        template = template[:i] + ":" + template[i:]
             additions.append(template)
         outputs.extend(additions)
         outputs.sort()
 
-        bestGuess = max(set(outputs), key=outputs.count)
-        if column in [2, 3]:
-            try:
-                from time import strptime
-                # will only return the best guess if the value is a valid time
-                strptime(bestGuess, "%H:%M")
+        correctFormat = [] # the array that will only take in outputs that fit formatting
+        for word in outputs:
+            if column in [2, 3] and bool(timeFilter.match(word)):
+                correctFormat.append(word)
+            elif column == 4 and (word.isdigit() or word.isdecimal()):
+                correctFormat.append(word)
+        
+        if (len(correctFormat) == 0):
+            bestGuess = max(set(outputs), key=outputs.count)
+        else:
+            bestGuess = max(set(correctFormat), key=correctFormat.count)
+        if (threshold <= 0.25):
+            return bestGuess
+        elif column in [2, 3]:
+            if Debug:
+                print("debug time[outputs]:", outputs)
+                print("debug time[bestguess]:", bestGuess)
+                print("debug time[correctFormat]:", correctFormat)
+            if(bool(timeFilter.match(bestGuess))):
                 return bestGuess
-            except:
+            else:
                 return None
         elif(column == 4):
-            try:
+            if Debug:
+                print("debug hours[outputs]:", outputs)
+                print("debug hours[bestguess]:", bestGuess)
+            if(bestGuess.isdigit() or bestGuess.isdecimal()):
                 # will only return the hours if theyre a valid number
-                return str(int(bestGuess))
-            except:
+                return bestGuess
+            else:
                 return ""  # This is the one exception to the errors The reason why is because we can calculate the hours if we have two valid times
     return None
 
