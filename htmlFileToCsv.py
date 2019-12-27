@@ -610,6 +610,7 @@ def requestCorrection(displayImage, col):
     global correctionEntry
     global submitButton
 
+    result = "" # the string to be returned for final answer
     # The guess that should have barely any restriction
     guess = correctValue(displayImage, col, 0.01)
     if (guess == None):  # if the guess relates to LITERALLY nothing available
@@ -636,6 +637,7 @@ def requestCorrection(displayImage, col):
     # basically waits till user presses a button and changes variable scope
     root.update_idletasks()
     root.wait_variable(decision)
+    result = correctionEntry.get()
 
     # Resetting changes made
     labelImage.configure(image=None)
@@ -656,7 +658,7 @@ def requestCorrection(displayImage, col):
     elif(submitButton):
         guessButton = False
         submitButton = False
-        return correctionEntry.get()
+        return result
 
 
 def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
