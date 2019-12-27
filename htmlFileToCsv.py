@@ -218,82 +218,155 @@ def imageScraper(file, outputArray=None):
                 "debugOutput/scrapper/mainTable{image}.jpg".format(image=debugIndex), table)
             debugIndex += 1
 
-        # removed first 2 as theyre the origional image and the table magnified
-        contours = collectContours(table)[2:]
+        # Grabbing verticle and horizontal images of table for better scraping
+        tableCompute = cv2.cvtColor(table, cv2.COLOR_BGR2GRAY)
+        tableCompute = cv2.threshold(
+            tableCompute, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
+        tableInvert = 255 - tableCompute
+        tKernelLength = nm.array(tableCompute).shape[1]//80
+        tKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
 
-        horizontalPairs = []
+        #############################
+        # Collecting Verticle Pairs #
+        #############################
         verticlePairs = []
-
-        # Collecting box pairs from contours
+        # Creating verticle kernel lines
+        tKernelVerticle = cv2.getStructuringElement(
+            cv2.MORPH_RECT, (1, tKernelLength))
+        tVerticleLines = cv2.erode(tableInvert, tKernelVerticle, iterations=3)
+        tVerticleLines = cv2.dilate(
+            tVerticleLines, tKernelVerticle, iterations=3)
+        tVerticleLines = cv2.threshold(
+            tVerticleLines, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
+        if Debug:
+            cv2.imwrite(
+                "debugOutput/scrapper/table{}VertLines.jpg".format(debugIndex), tVerticleLines)
+        # Added this line because it needs a white background rather than black background
+        tVerticleLines = 255 - tVerticleLines
+        # Adding edge lines for contour collection
+        cv2.line(tVerticleLines, (0, floor(tVerticleLines.shape[0] * 0.01)), (
+            tVerticleLines.shape[1], floor(tVerticleLines.shape[0] * 0.01)), (0, 0, 0), 5)
+        cv2.line(tVerticleLines, (0, floor(tVerticleLines.shape[0] * 0.99)), (
+            tVerticleLines.shape[1], floor(tVerticleLines.shape[0] * 0.99)), (0, 0, 0), 5)
+        # Collecting verticle contours
+        contours = cv2.findContours(
+            tVerticleLines, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0]
+        # Figuring out the length that relates to the majority of the table, (aka, longer lengths relates to length of table rather than random lines)
+        maxLength = 0
+        tableHeightPair = ()  # empty tuple for checking later
         for c in contours:
             x, y, w, h = cv2.boundingRect(c)
-            horizontalPairs.append((y, y+h))
-            verticlePairs.append((x, x+w))
-        horizontalPairs.sort()
+            # if the height of the contour is at least 90% as long as the whole table, its safe to assume that that belongs to the whole table
+            if(h >= table.shape[0] * 0.9):
+                tableHeightPair = (y, h)
+                break
+            elif(h > maxLength):  # if the height isnt a significant size, then the best choice is the longest length
+                maxlength = h
+                tableHeightPair = (y, h)
+        for c in contours:
+            x, y, w, h = cv2.boundingRect(c)
+            if((y, h) == tableHeightPair):
+                verticlePairs.append((x, x + w))
         verticlePairs.sort()
 
-        # Remove all duplicate and similiar points
-        n = 0
-        while n < len(horizontalPairs) - 1:
-            # remove exact duplicate coords
-            if(horizontalPairs[n] == horizontalPairs[n+1]):
-                horizontalPairs.pop(n + 1)
-            elif (horizontalPairs[n][0] == horizontalPairs[n+1][0] and horizontalPairs[n][1] < horizontalPairs[n+1][1]):
-                horizontalPairs.pop(n + 1)
-            elif (horizontalPairs[n][0] == horizontalPairs[n+1][0] and horizontalPairs[n][1] > horizontalPairs[n+1][1]):
-                horizontalPairs.pop(n)
-            elif (horizontalPairs[n][1] == horizontalPairs[n+1][1] and horizontalPairs[n][0] < horizontalPairs[n+1][0]):
-                horizontalPairs.pop(n + 1)
-            elif (horizontalPairs[n][1] == horizontalPairs[n+1][1] and horizontalPairs[n][0] > horizontalPairs[n+1][0]):
-                horizontalPairs.pop(n)
-            elif(horizontalPairs[n][0]-5 < horizontalPairs[n+1][0] and horizontalPairs[n][0] + 5 > horizontalPairs[n+1][0]):
-                xpair1 = max(horizontalPairs[n][0], horizontalPairs[n+1][0])
-                xpair2 = min(horizontalPairs[n][1], horizontalPairs[n+1][1])
-                horizontalPairs[n] = (xpair1, xpair2)
-                horizontalPairs.pop(n+1)
-            else:
-                n += 1
-        n = 0
-        while(n < len(verticlePairs) - 1):
-            if(verticlePairs[n] == verticlePairs[n+1]):  # remove exact duplicate coords
-                verticlePairs.pop(n+1)
-            elif (verticlePairs[n][0] == verticlePairs[n+1][0] and verticlePairs[n][1] < verticlePairs[n+1][1]):
-                verticlePairs.pop(n + 1)
-            elif (verticlePairs[n][0] == verticlePairs[n+1][0] and verticlePairs[n][1] > verticlePairs[n+1][1]):
-                verticlePairs.pop(n)
-            elif (verticlePairs[n][1] == verticlePairs[n+1][1] and verticlePairs[n][0] < verticlePairs[n+1][0]):
-                verticlePairs.pop(n + 1)
-            elif (verticlePairs[n][1] == verticlePairs[n+1][1] and verticlePairs[n][0] > verticlePairs[n+1][0]):
-                verticlePairs.pop(n)
-            elif(verticlePairs[n][0]-5 < verticlePairs[n+1][0] and verticlePairs[n][0] + 5 > verticlePairs[n+1][0]):
-                ypair1 = max(verticlePairs[n][0], verticlePairs[n+1][0])
-                ypair2 = min(verticlePairs[n][1], verticlePairs[n+1][1])
-                verticlePairs[n] = (ypair1, ypair2)
-                verticlePairs.pop(n+1)
-            else:
-                n += 1
-        # Removing pairs that collide with other pairs
-        for i in verticlePairs:
-            for j in verticlePairs:
-                if(i == j):
-                    continue
-                # Checks if any point is inside its bounds
-                if((i[0] <= j[0] and j[0] <= i[1]) or (i[0] <= j[1] and j[1] <= i[1])):
-                    if(i[1] - i[0] > j[1] - j[0]):  # compares and keeps the largest bounds
-                        verticlePairs.remove(j)
-                    else:
-                        verticlePairs.remove(i)
-                        break  # needed in case i is removed to move to next iteration of i
-        for i in horizontalPairs:
-            for j in horizontalPairs:
-                if(i == j):
-                    continue
-                if((i[0] <= j[0] and j[0] <= i[1]) or (i[0] <= j[1] and j[1] <= i[1])):
-                    if(i[1] - i[0] > j[1] - j[0]):
-                        horizontalPairs.remove(j)
-                    else:
-                        horizontalPairs.remove(i)
-                        break  # needed in case i is removed to move to next iteration of i
+        if Debug:
+            print("Debug VerticlePairs:", verticlePairs)
+        # this is the gap before the table from the left side
+        verticlePairs.pop(0)
+        # this is the gap after the table from the right side
+        verticlePairs.pop(-1)
+
+        # Fixing overlapping of some pairs
+        for v in range(len(verticlePairs) - 1):
+            # if the tail end of a pair overlaps the beginning of the next pair, then swap positions. itll make it slightly smaller, but it will miss table walls
+            if(verticlePairs[v][1] > verticlePairs[v + 1][0]):
+                temp = verticlePairs[v][1]
+                verticlePairs[v] = (verticlePairs[v][0],
+                                    verticlePairs[v + 1][0])
+                verticlePairs[v + 1] = (temp, verticlePairs[v + 1][1])
+
+        if Debug:
+            print("Debug VerticlePairs:", verticlePairs)
+            debugimg = cv2.cvtColor(tVerticleLines, cv2.COLOR_GRAY2BGR)
+            for v in verticlePairs:
+                cv2.line(debugimg, (v[0], 0),
+                         (v[0], debugimg.shape[0]), (0, 0, 255))
+                cv2.line(debugimg, (v[1], 0),
+                         (v[1], debugimg.shape[0]), (0, 0, 255))
+            cv2.imwrite(
+                "debugOutput/scrapper/table{}VertContours.jpg".format(debugIndex), debugimg)
+
+        ###############################
+        # Collecting Horizontal Pairs #
+        ###############################
+        horizontalPairs = []
+        # Creating horizontal kernel lines
+        tKernelHorizontal = cv2.getStructuringElement(
+            cv2.MORPH_RECT, (tKernelLength, 1))
+        tHorizontalLines = cv2.erode(
+            tableInvert, tKernelHorizontal, iterations=3)
+        tHorizontalLines = cv2.dilate(
+            tHorizontalLines, tKernelHorizontal, iterations=3)
+        tHorizontalLines = cv2.threshold(
+            tHorizontalLines, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
+        if Debug:
+            cv2.imwrite(
+                "debugOutput/scrapper/table{}HorLines.jpg".format(debugIndex), tHorizontalLines)
+        # Added this line because it needs a white background rather than black background
+        tHorizontalLines = 255 - tHorizontalLines
+        # Adding edge lines for contour collection
+        cv2.line(tHorizontalLines, (floor(tHorizontalLines.shape[1] * 0.01), 0), (floor(
+            tHorizontalLines.shape[1] * 0.01), tHorizontalLines.shape[0]), (0, 0, 0), 5)
+        cv2.line(tHorizontalLines, (floor(tHorizontalLines.shape[1] * 0.99), 0), (floor(
+            tHorizontalLines.shape[1] * 0.99), tHorizontalLines.shape[0]), (0, 0, 0), 5)
+        # Collecting Horizontal contours
+        contours = cv2.findContours(
+            tHorizontalLines, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0]
+
+        # Figuring out the length that relates to the majority of the table, (aka, longer lengths relates to length of table rather than random lines)
+        maxLength = 0
+        tableWidthPair = ()  # empty tuple for checking later
+        for c in contours:
+            x, y, w, h = cv2.boundingRect(c)
+            # if the width of the contour is at least 90% as long as the whole table, its safe to assume that that belongs to the whole table
+            if(w >= tHorizontalLines.shape[1] * 0.9):
+                tableWidthPair = (x, w)
+                break
+            elif(w > maxLength):  # if the width isnt a significant size, then the best choice is the longest length
+                maxLength = w
+                tableWidthPair = (x, w)
+        for c in contours:
+            x, y, w, h = cv2.boundingRect(c)
+            if((x, w) == tableWidthPair):
+                horizontalPairs.append((y, y + h))
+        horizontalPairs.sort()
+
+        if Debug:
+            print("Debug HorizontalPairs:", horizontalPairs)
+        # this is the gap before the table from the left side
+        horizontalPairs.pop(0)
+        # this is the gap after the table from the right side
+        horizontalPairs.pop(-1)
+
+        # Fixing overlapping of some pairs
+        for h in range(len(horizontalPairs) - 1):
+            # if the tail end of a pair overlaps the beginning of the next pair, then swap positions. itll make it slightly smaller, but it will miss table walls
+            if(horizontalPairs[h][1] > horizontalPairs[h + 1][0]):
+                temp = horizontalPairs[h][1]
+                horizontalPairs[h] = (
+                    horizontalPairs[h][0], horizontalPairs[h + 1][0])
+                horizontalPairs[h + 1] = (temp, horizontalPairs[h + 1][1])
+
+        if Debug:
+            print("Debug HorizontalPairs:", horizontalPairs)
+            debugimg = cv2.cvtColor(tHorizontalLines, cv2.COLOR_GRAY2BGR)
+            for h in horizontalPairs:
+                cv2.line(debugimg, (0, h[0]),
+                         (debugimg.shape[1], h[0]), (0, 0, 255))
+                cv2.line(debugimg, (0, h[1]),
+                         (debugimg.shape[1], h[1]), (0, 0, 255))
+            cv2.imwrite(
+                "debugOutput/scrapper/table{}HorContours.jpg".format(debugIndex), debugimg)
 
         #####################################
         # Phase 3: Time for actual Scraping #
