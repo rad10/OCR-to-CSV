@@ -539,7 +539,8 @@ def correctValue(image, column, threshold=0.3):
             guesses.append(compareKnownAliases(i, column))
         guesses.sort()
         guesses.append(("", 0))  # full stop to make searcher read last item
-        # print(guesses)
+        if Debug:
+            print(guesses)
         check = guesses[0][0]
 
         for i in guesses:
@@ -553,10 +554,10 @@ def correctValue(image, column, threshold=0.3):
                 check = i[0]
             score = max(score, i[1])
             count += 1
-        # print(accuracy)
-        # print(bestGuess)
+        if Debug:
+            print(accuracy)
+            print(bestGuess)
         if(accuracy >= len(bestGuess)*threshold and len(bestGuess) <= largest):
-            # print(bestGuess)
             return bestGuess
         else:
             return None
