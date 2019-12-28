@@ -546,13 +546,14 @@ def correctValue(image, column, threshold=0.3):
         guesses.sort()
         guesses.append(("", 0))  # full stop to make searcher read last item
         if Debug:
-            print(guesses)
+            print("Debug Words[Guesses]:", guesses)
         check = guesses[0][0]
 
         for i in guesses:
             if(i[0] != check):
                 # print(check, accuracy, score, count)
-                if(count > closestMatch):
+                # if the name occurs more often than previous string or the number of accurate characters is more than the length of previous string
+                if((count > closestMatch and accuracy <= len(check)) or score > len(bestGuess)):
                     closestMatch = count
                     accuracy = score
                     bestGuess = check
