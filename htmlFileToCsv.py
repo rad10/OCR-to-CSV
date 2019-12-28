@@ -449,15 +449,27 @@ def correctValue(image, column, threshold=0.3):
         temp, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
     outputs.append(tess.image_to_string(temp))
 
-    if(max(set(outputs), key=outputs.count) == ""):  # quick check incase box is looking empty
-        invert = 255 - temp  # threshed image
+    if(outputs.count("") >= 2):  # quick check incase box is looking empty; will only skip if 2/3 or more are blank
+        if Debug:
+            print("Looks empty")
+        # inverts the threshed image, removes 8px border in case it includes external lines or table borders
+        invert = 255 - temp[8:-8, 8:-8]
         # countnonzero only counts white pixels, so i need to invert to turn black pixels white
         pixelCount = cv2.countNonZero(invert)
         pixelTotal = temp.shape[0] * temp.shape[1]
-        # will only consider empty if image used less than 5% of pixels. yes, that small
-        if(pixelCount/pixelTotal <= 0.05):
+
+        if Debug:
+            print("debug blankPercent:", pixelCount/pixelTotal)
+        # will only consider empty if image used less than 1% of pixels. yes, that small
+        if(pixelCount/pixelTotal <= 0.01):
+            if Debug:
+                print("It's Blank")
             return ""  # Skipping ahead if its already looking like theres nothing
+        elif(threshold == 0):  # for user validation
+            return "NaN"
         else:
+            if Debug:
+                print("we couldnt read it")
             return None  # if theres enough pixels to describe a possbile image, then it isnt empty, but it cant read it
 
     # Using contrast for more values
