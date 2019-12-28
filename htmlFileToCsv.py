@@ -5,6 +5,7 @@ import pip
 from math import floor
 from time import sleep
 import re
+import json
 
 # if opencv isnt installed, it'll install it for you
 from sys import argv
@@ -39,6 +40,9 @@ tess.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract'
 
 # Functions
 Debug = False
+
+JSON = open("./aliases.json", "r").read()
+JSON = json.loads(JSON)
 
 
 def debug(content):
@@ -403,28 +407,11 @@ def compareKnownAliases(id, col=1):
     the number of characters the string has in common with it. If the string matches with nothing, 
     it will return ("", 0) but this is rare.
     """
-    names = {
-        1: [
-            "nick c",
-            "nick cottrell",
-            "matthew magyar",
-            "jason magyar",
-            "jayden gonzalez",
-            "zyon hall",
-            "julyus gonzalez",
-            "emanuel bay",
-            "malachi sorden"
-        ],
-        5: [
-            "stem",
-            "computer"
-        ]
-    }
     id = id.lower()
     closestMatch = ""
     mostMatches = 0
     matches = 0
-    for alias in names[col]:
+    for alias in JSON["names"][str(col)]:
         matches = 0
         for i in range(max(len(id), len(alias))):
             try:
