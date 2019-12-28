@@ -759,9 +759,18 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
             for col in range(1, len(row)):  # skip first col which is dummy
                 temp = correctValue(row[col], col)
                 if(temp == None):  # the correction failed. the user must return the correction
-                    temp = requestCorrection(row[col], col)
+                    temp = "RequestCorrection"
                 results[-1][-1].append(temp)
             results[-1][-1].extend(dates)
+
+        if Debug:
+            print("Debug Results:", results)
+        # Iterating through results to see where errors occured
+        for row in range(len(results[-1])):
+            for col in range(len(results[-1][row][:-len(dates)])):
+                if (results[-1][row][col] == "RequestCorrection"):
+                    results[-1][row][col] = requestCorrection(
+                        sheet[-1][row + 1][col + 1], col + 1)
     if(outputDict == None):
         return results
     else:
