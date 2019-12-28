@@ -495,7 +495,7 @@ def correctValue(image, column, threshold=0.3):
             "G": ["(", "<", "{", "[", "¢", "©"],
             # "D":["|]", "|)"],
             # "d":["c|", "c/", "c\\"], # D d
-            "E": ["3"],  # E
+            "E": ["3", "€"],  # E
             "g": ["9"],  # g
             # "H":["|-|", "+-+", "++", "4"], # H
             "I": ["1", "/", "\\", "|", "]", "["],  # I l
@@ -561,10 +561,15 @@ def correctValue(image, column, threshold=0.3):
                 check = i[0]
             score = max(score, i[1])
             count += 1
+
         if Debug:
-            print(accuracy)
-            print(bestGuess)
-        if(accuracy >= len(bestGuess)*threshold and len(bestGuess) <= largest):
+            print("Debug Words[accuracy]:", accuracy)
+            print("Debug Words[bestGuess]:", bestGuess)
+        if(bestGuess == "" and threshold == 0):
+            return "NaN"  # this is only for the user request section
+        elif (bestGuess == ""):
+            return None  # if we did our job correctly, the name/purpose should never be blank
+        elif(accuracy >= len(bestGuess)*threshold and (len(bestGuess) <= largest or threshold == 0)):
             return bestGuess
         else:
             return None
@@ -665,7 +670,7 @@ def requestCorrection(displayImage, col):
 
     result = ""  # the string to be returned for final answer
     # The guess that should have barely any restriction
-    guess = correctValue(displayImage, col, 0.01)
+    guess = correctValue(displayImage, col, 0)
     if (guess == None):  # if the guess relates to LITERALLY nothing available
         guess = ""
 
