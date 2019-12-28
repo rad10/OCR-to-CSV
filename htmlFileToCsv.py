@@ -523,7 +523,7 @@ def correctValue(image, column, threshold=0.3):
             additions.append(template)
         outputs.extend(additions)
         outputs.sort()
-        for i in range(len(outputs)-1, 1, -1):
+        for i in range(len(outputs)-1, 0, -1):  # Remove duplicate entries
             if(outputs[i] == outputs[i-1]):
                 outputs.pop(i)
 
