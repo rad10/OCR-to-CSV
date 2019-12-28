@@ -527,12 +527,19 @@ def correctValue(image, column, threshold=0.3):
             if(outputs[i] == outputs[i-1]):
                 outputs.pop(i)
 
+        # Removing blank entries. it wasnt considered blank, so it shouldnt be there
+        for i in range(len(outputs) - 1, -1, -1):
+            if(outputs[i] == ""):
+                outputs.pop(i)
+
+        if Debug:
+            print("Debug Words[outputs]:", outputs)
         largest = len(max(set(outputs), key=len))
-        bestGuess = ""
-        closestMatch = 0
-        accuracy = 0
-        score = 0
-        count = 0
+        bestGuess = ""  # variable that determines result
+        closestMatch = 0  # the number of times best guess occurs in our guesses
+        accuracy = 0  # the max number of characters that matches with the best guess
+        score = 0  # temp var for accuracy
+        count = 0  # temp variable for closestMatch
         guesses = []
         for i in outputs:
             guesses.append(compareKnownAliases(i, column))
