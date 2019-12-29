@@ -41,9 +41,10 @@ tess.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract'
 # Functions
 Debug = False
 
-JSON = open("./aliases.json", "r").read()
-JSON = json.loads(JSON)
-
+JSONFile = open("./aliases.json", "r")
+JSON = json.load(JSONFile)
+JSONFile.close()
+JSONChange = False # this is only used when the database is updated
 
 def debug(content):
     if Debug:
@@ -714,6 +715,8 @@ def requestCorrection(displayImage, col, guess=""):
 
 
 def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
+    global JSON
+    global JSONChange
     results = []
     # GUI widgets to manipulate while in middle of function
     if(gui):
@@ -765,7 +768,13 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
                 if (results[-1][row][col][0:18] == "RequestCorrection:"):
                     results[-1][row][col] = requestCorrection(
                         sheet[-1][row + 1][col + 1], col + 1, results[-1][row][col][18:])
-                        sheet[-1][row + 1][col + 1], col + 1)
+                    if (col + 1 in [1, 5]):
+                        for entry in JSON["names"][str(col + 1)]:
+                            if (results[-1][row][col].lower() == entry):
+                                break
+                        else:
+                            JSONChange = True
+                            JSON["names"][str(col + 1)].append(results[-1][row][col].lower()) # if the name possibly entered in by the user doesnt exist in the database, add it
     if(outputDict == None):
         return results
     else:
@@ -871,6 +880,12 @@ def main():
         raise
     popupTag(
         "Done", "Congrats! its all finished.\nLook at your csv and see if it looks alright.")
+    if (JSONChange):
+        JSON["names"]["1"].sort() # Sorting new libraries for optimization
+        JSON["names"]["5"].sort()
+        JSONFile = open("aliases.json", "w")
+        json.dump(JSON, JSONFile, indent=4, separators=(",", ": "), ensure_ascii=True, sort_keys=True)
+        JSONFile.close()
     return
 
 
