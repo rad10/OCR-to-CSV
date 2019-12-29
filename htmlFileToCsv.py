@@ -430,7 +430,7 @@ def correctValue(image, column, threshold=0.3):
     @param {cvimg} image: The image that is being transcribed.\n
     @param {int} column: The column in the table that the image is in. This is very important as its part of how the translator corrects the outputs.\n
     @param {double} threshold: Optional variable. Changes the percentage of characters that need to match the origional of it to return. Higher threshholds mean more strict requirements and higher chance of getting nothing. Lower threshholds mean higher chance to get a value that may or may not be incorrect.\n
-    @returns: It will return the name that closest resembles the image, or it will return None if no name could be accepted.\n
+    @returns: It will return the name that closest resembles the image, or it will return \"RequestCorrection:\" if no name could be accepted.\n
     It works by taking an image and running tesseract to get the value from the unchanges color image, then it grabs the ocr output from the same image with different effects, such as greyscale, thresholds, and contrast increase.\n
     The next step for it is to take each unique value make, then run it through another function that creates a new string with the characters in it resembling what should be in there (no numbers or symbols in names, no chars in numbers, etc.) and adds it to the pile of strings.\n
     The last step is for it take all the new unique strings and run them through another function to see which names the strings closest resemble. The name with the most conclusions is considered the best guess.\n
@@ -461,16 +461,14 @@ def correctValue(image, column, threshold=0.3):
         if Debug:
             print("debug blankPercent:", pixelCount/pixelTotal)
         # will only consider empty if image used less than 1% of pixels. yes, that small
-        if(pixelCount/pixelTotal <= 0.01):
+        if(pixelCount/pixelTotal <= 0.01 or column == 5):
             if Debug:
                 print("It's Blank")
             return ""  # Skipping ahead if its already looking like theres nothing
-        elif(threshold == 0):  # for user validation
-            return "NaN"
         else:
             if Debug:
                 print("we couldnt read it")
-            return None  # if theres enough pixels to describe a possbile image, then it isnt empty, but it cant read it
+            return "RequestCorrection:NaN"  # if theres enough pixels to describe a possbile image, then it isnt empty, but it cant read it
 
     # Using contrast for more values
     for i in range(50):
@@ -480,6 +478,8 @@ def correctValue(image, column, threshold=0.3):
     for i in range(len(outputs)-1, 1, -1):
         if(outputs[i] == outputs[i-1]):
             outputs.pop(i)
+
+
     ##########################
     ## APPLYING CORRECTIONS ##
     ##########################
@@ -565,14 +565,12 @@ def correctValue(image, column, threshold=0.3):
         if Debug:
             print("Debug Words[accuracy]:", accuracy)
             print("Debug Words[bestGuess]:", bestGuess)
-        if(bestGuess == "" and threshold == 0):
-            return "NaN"  # this is only for the user request section
-        elif (bestGuess == ""):
-            return None  # if we did our job correctly, the name/purpose should never be blank
+        if (bestGuess == ""):
+            return "RequestCorrection:NaN"  # if we did our job correctly, the name/purpose should never be blank
         elif(accuracy >= len(bestGuess)*threshold and (len(bestGuess) <= largest or threshold == 0)):
             return bestGuess
         else:
-            return None
+            return "RequestCorrection:" + bestGuess
 
     elif column in [2, 3, 4]:
         ####################################
@@ -635,9 +633,9 @@ def correctValue(image, column, threshold=0.3):
             bestGuess = max(set(outputs), key=outputs.count)
         else:
             bestGuess = max(set(correctFormat), key=correctFormat.count)
-        if (threshold <= 0.25):
+        if (threshold == 0):
             return bestGuess
-        elif column in [2, 3]:
+        if column in [2, 3]:
             if Debug:
                 print("debug time[outputs]:", outputs)
                 print("debug time[bestguess]:", bestGuess)
@@ -645,7 +643,7 @@ def correctValue(image, column, threshold=0.3):
             if(bool(timeFilter.match(bestGuess))):
                 return bestGuess
             else:
-                return None
+                return "RequestCorrection:" + str(bestGuess)
         elif(column == 4):
             if Debug:
                 print("debug hours[outputs]:", outputs)
@@ -655,10 +653,10 @@ def correctValue(image, column, threshold=0.3):
                 return bestGuess
             else:
                 return ""  # This is the one exception to the errors The reason why is because we can calculate the hours if we have two valid times
-    return None
+    return "RequestCorrection:"
 
 
-def requestCorrection(displayImage, col):
+def requestCorrection(displayImage, col, guess=""):
     global labelImage
     global errorLabel
     global confidenceDescription
@@ -669,10 +667,6 @@ def requestCorrection(displayImage, col):
     global submitButton
 
     result = ""  # the string to be returned for final answer
-    # The guess that should have barely any restriction
-    guess = correctValue(displayImage, col, 0)
-    if (guess == None):  # if the guess relates to LITERALLY nothing available
-        guess = ""
 
     # Setting up image to place in GUI
     image = Image.fromarray(displayImage)
@@ -768,8 +762,9 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
         # Iterating through results to see where errors occured
         for row in range(len(results[-1])):
             for col in range(len(results[-1][row][:-len(dates)])):
-                if (results[-1][row][col] == "RequestCorrection"):
+                if (results[-1][row][col][0:18] == "RequestCorrection:"):
                     results[-1][row][col] = requestCorrection(
+                        sheet[-1][row + 1][col + 1], col + 1, results[-1][row][col][18:])
                         sheet[-1][row + 1][col + 1], col + 1)
     if(outputDict == None):
         return results
