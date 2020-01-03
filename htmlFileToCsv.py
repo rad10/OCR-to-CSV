@@ -44,7 +44,8 @@ Debug = False
 JSONFile = open("./aliases.json", "r")
 JSON = json.load(JSONFile)
 JSONFile.close()
-JSONChange = False # this is only used when the database is updated
+JSONChange = False  # this is only used when the database is updated
+
 
 def debug(content):
     if Debug:
@@ -82,6 +83,12 @@ def appendToFile(dir, content):
 
 
 def collectContours(image):
+    """ Sub function used by scrapper.\n
+    @param image: an opencv image\n
+    @return returns an ordered list of contours found in the image.\n
+    This function was heavily influenced by its source.\n
+    @source: https://medium.com/coinmonks/a-box-detection-algorithm-for-any-image-containing-boxes-756c15d7ed26
+    """
     debugIndex = 0
     # Grab absolute thresh of image
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -567,7 +574,8 @@ def correctValue(image, column, threshold=0.3):
             print("Debug Words[accuracy]:", accuracy)
             print("Debug Words[bestGuess]:", bestGuess)
         if (bestGuess == ""):
-            return "RequestCorrection:NaN"  # if we did our job correctly, the name/purpose should never be blank
+            # if we did our job correctly, the name/purpose should never be blank
+            return "RequestCorrection:NaN"
         elif(accuracy >= len(bestGuess)*threshold and (len(bestGuess) <= largest or threshold == 0)):
             return bestGuess
         else:
@@ -658,6 +666,12 @@ def correctValue(image, column, threshold=0.3):
 
 
 def requestCorrection(displayImage, col, guess=""):
+    """This is the function used when a string doesnt confidently match a name.\n
+    @param displayImage: The image placed on the display for user to see.\n
+    @param {int} col: The column number that the image was found in. This is needed for placing the AI's guess.\n
+    @param {string} guess: This is to straight up overwrite the AI's guess with the string. This can be helpful so that the AI doesnt have to process the image again.\n
+    @return: the users answer.
+    """
     global labelImage
     global errorLabel
     global confidenceDescription
@@ -715,6 +729,13 @@ def requestCorrection(displayImage, col, guess=""):
 
 
 def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
+    """ Phase two of plan. This function goes through the image dictionary passed 
+    to it and creates a matrix of the dictionary in text.\n
+    @param sheetsDict: a matrix of images made from a table.\n
+    @param gui: whether to switch on global gui manipulation for the progress bar.\n
+    @param outputDict: a variable passed by reference instead of using return.\n
+    @return a matrix of strings that represents the text in the image dictionary.
+    """
     global JSON
     global JSONChange
     results = []
@@ -774,7 +795,9 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
                                 break
                         else:
                             JSONChange = True
-                            JSON["names"][str(col + 1)].append(results[-1][row][col].lower()) # if the name possibly entered in by the user doesnt exist in the database, add it
+                            # if the name possibly entered in by the user doesnt exist in the database, add it
+                            JSON["names"][str(
+                                col + 1)].append(results[-1][row][col].lower())
     if(outputDict == None):
         return results
     else:
@@ -881,10 +904,11 @@ def main():
     popupTag(
         "Done", "Congrats! its all finished.\nLook at your csv and see if it looks alright.")
     if (JSONChange):
-        JSON["names"]["1"].sort() # Sorting new libraries for optimization
+        JSON["names"]["1"].sort()  # Sorting new libraries for optimization
         JSON["names"]["5"].sort()
         JSONFile = open("aliases.json", "w")
-        json.dump(JSON, JSONFile, indent=4, separators=(",", ": "), ensure_ascii=True, sort_keys=True)
+        json.dump(JSON, JSONFile, indent=4, separators=(
+            ",", ": "), ensure_ascii=True, sort_keys=True)
         JSONFile.close()
     return
 
