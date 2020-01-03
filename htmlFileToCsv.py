@@ -476,7 +476,8 @@ def correctValue(image, column, threshold=0.3):
         else:
             if Debug:
                 print("we couldnt read it")
-            return "RequestCorrection:NaN"  # if theres enough pixels to describe a possbile image, then it isnt empty, but it cant read it
+            # if theres enough pixels to describe a possbile image, then it isnt empty, but it cant read it
+            return "RequestCorrection:NaN"
 
     # Using contrast for more values
     for i in range(50):
@@ -486,7 +487,6 @@ def correctValue(image, column, threshold=0.3):
     for i in range(len(outputs)-1, 1, -1):
         if(outputs[i] == outputs[i-1]):
             outputs.pop(i)
-
 
     ##########################
     ## APPLYING CORRECTIONS ##

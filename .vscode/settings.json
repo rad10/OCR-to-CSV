@@ -1,6 +1,13 @@
 {
     "editor.formatOnSave": true,
     "python.linting.pylintEnabled": true,
+    "python.analysis.openFilesOnly": true,
+    "python.analysis.disabled": [
+        "no-member"
+    ],
+    "python.linting.pylintArgs": [
+        "--disable=no-member"
+    ],
     "files.defaultLanguage": "python",
     "files.exclude": {
         "**/.git": true,
