@@ -506,17 +506,29 @@ def compareKnownAliases(id, col=1):
     closestMatch = ""
     mostMatches = 0
     matches = 0
-    for alias in JSON["names"][str(col)]:
-        matches = 0
-        for i in range(max(len(id), len(alias))):
-            try:
+    if (col == 1 and id.count(" ") == 1):
+        for alias in JSON["names"]["1"]:
+            matches = 0
+            for i in range(min(alias.find(" "), id.find(" "))):
                 if(id[i] == alias[i]):
                     matches += 1
-            except IndexError:
-                break
-        if (matches > mostMatches):
-            closestMatch = alias
-            mostMatches = matches
+            lalias = alias.find(" ") + 1
+            lid = id.find(" ") + 1
+            for i in range(min(len(alias) - lalias, len(id) - lid)):
+                if(id[lid + i] == alias[lalias + i]):
+                    matches += 1
+            if (matches > mostMatches):
+                closestMatch = alias
+                mostMatches = matches
+    else:
+        for alias in JSON["names"][str(col)]:
+            matches = 0
+            for i in range(min(len(id), len(alias))):
+                if(id[i] == alias[i]):
+                    matches += 1
+            if (matches > mostMatches):
+                closestMatch = alias
+                mostMatches = matches
     return closestMatch, mostMatches
 
 
