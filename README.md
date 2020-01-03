@@ -1,32 +1,34 @@
-# htmlToCsv
+# OCR to CSV
+This project is made for intended use by STEMTech Neighborhood Academy. This tool is a rework of its predecessor, [htmlToCsv](https://github.com/rad10/htmlToCsv) as it now has a GUI and built in OCR generator.
 
-This is a project to take data out of inkspaces bamboo paper and put it in database format. This project is made for intended use by STEMTech Neighborhood Academy.
+The purpose of this project is to take data from sign in sheets and put them in a digital database so that statistical analysis can be done with the data. This project is most useful for people who need to keep track of who enters and leaves a building and it needs to be done on paper.
 
-The intended use for this project is to take names written on a sign up sheet including other values, process it through a writing to text machine, and put that information on an excel sheet for use in data manipulation other projects.
+The task is to make a functional tool that can take data from the sign in sheets in either the form of an image or a PDF (with the latter being most preferred.) and organize that data so that it may be used in an excel sheet.
 
-The task is to make a functional tool that can take html files taken from inkspaces website since they store their digital output on the HTML source code itself.
-With that this tool is intended to dig into each html file in its directory (or depending on the language can allow other places etc.) but most tools are suppossed to interact with HTML files in the same directory by activation without arguements [can be found on lines `72~83`].
-
-The program is designed to open each HTML file and strip the data collected by inkspace from the rest of the HTML file [can be found in lines `26~36`]. With this information, it will attempt to organize all the names of people as well as other stats as well as possible into a datasheet organized by people and their data values (which goes as full name, time in, time out, hours, and purpose of visit.)[can be found in lines `38~55`]
-With this dictionary of names, it then sets it up in a CSV format and either creates a names.csv file or adds it to a currently existing file [can be found in lines `58~67`]. From here the information gets passed down via the CSV file to wherever it needs to be, particularly excel.
-
+With that the 
 and that is the full intention of this program.
+## Special Thanks
+This is special thanks for the sources and libraries used to build this thing
+### Libraries used:
 
-### Python
+ - [Tesseract OCR](https://github.com/tesseract-ocr/tesseract)
+ - [OpenCV](https://opencv.org/)
+ - [TKinter](https://docs.python.org/3/library/tkinter.html)
+### Sources:
+The sources that helped me figure out how to do several of the things i needed to do.
+ - [StackExchange](https://stackexchange.com/) (There are too many articles used for me to link)
+ - [Medium](https://medium.com/coinmonks/a-box-detection-algorithm-for-any-image-containing-boxes-756c15d7ed26) for my work with table slicing.
+ - [PAGE](http://page.sourceforge.net/) for templating my GUI outlines
 
-The python variation of this application was the origional version of this program. It works best and is the most up to date.
-
+## Python
+The python variation of this application was the original version of this program. It works best and is the most up to date.
 > tested with `Python 3.6.4`
 
-requires no additional libraries to run.
+### Libraries Used:
+
+ - [pytesseract](https://pypi.org/project/pytesseract/)
+ - [opencv-python](https://pypi.org/project/opencv-python/)
+ - [tkinter](https://docs.python.org/3/library/tkinter.html)
+ - ImageTk
 
 This variant contains internal `debug()` methods that will activate when `Debug = True` to see what values are in script. (or you can use breakpoints for debugging.)
-
-#### Help
-
-> ``*htmlFileToCsv.py [OPTION] [HTML File]*``
->> ``This program is intended to take data from inkspace HTML files and append it to a CSV file in the same directory.``
->> ``*INSTRUCTIONS:* save inkspace output to an HTML file in the same directory as this program. Once done, run this program. Profit.``
->> ``*OPTIONS:*``
->>> ``-h | --help\t\t\tPrints this help screen.``
->>> ``-d | --display\t\t\tPrints the output of the CSV into the console as well as into the file.``
