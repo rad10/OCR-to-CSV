@@ -445,47 +445,70 @@ def correctValue(image, column, threshold=0.3):
     However, the best guess may not be accepted if the name doesnt share enough characters in common with all the guesses, then its scrapped and nothing is returned.
     """
     outputs = []
+
+    userWords = ""
+    charList = ""
+    if (column == 1):
+        userWords = "config/names.user-words"
+        charList = "abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    elif column in [2, 3]:
+        charList = "0123456789:"
+    elif (column == 4):
+        charList = "0123456789"
+    elif (column == 5):
+        userWords = "config/purpose.user-words"
+        charList = "abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ-/"
+
+    # inverts the threshed image, removes 8px border in case it includes external lines or table borders
+    invert = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    invert = cv2.threshold(invert, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
+    invert = 255 - invert[8:-8, 8:-8]
+    # countnonzero only counts white pixels, so i need to invert to turn black pixels white
+    pixelCount = cv2.countNonZero(invert)
+    pixelTotal = image.shape[0] * image.shape[1]
+
+    if Debug:
+        print("debug blankPercent:", pixelCount/pixelTotal)
+    # will only consider empty if image used less than 1% of pixels. yes, that small
+    if(pixelCount/pixelTotal <= 0.01 or column == 5):
+        if Debug:
+            print("It's Blank")
+        return ""  # Skipping ahead if its already looking like theres nothing
+    del invert
+    del pixelCount
+    del pixelTotal
+
     # Get normal results
-    outputs.append(tess.image_to_string(image))
+    for pageMode in [6, 7, 8, 11, 13]:
+        outputs.append(tess.image_to_string(image, lang='eng', config="--dpi 300 --psm {} -c \"tessedit_char_whitelist={}\"".format(pageMode, charList)))
+        if column in [1, 5]:
+            outputs.append(tess.image_to_string(image, lang='eng', config="--dpi 300 --psm {} --user-words {} -c \"tessedit_char_whitelist={}\"".format(pageMode, userWords, charList)))
 
     # Get black and white results
     temp = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    outputs.append(tess.image_to_string(temp))
+    for pageMode in [6, 7, 8, 11, 13]:
+        outputs.append(tess.image_to_string(temp, lang='eng', config="--dpi 300 --psm {} -c \"tessedit_char_whitelist={}\"".format(pageMode, charList)))
+        if column in [1, 5]:
+            outputs.append(tess.image_to_string(temp, lang='eng', config="--dpi 300 --psm {} --user-words {} -c \"tessedit_char_whitelist={}\"".format(pageMode, userWords, charList)))
 
     # get thresh results
     temp = cv2.threshold(
         temp, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
-    outputs.append(tess.image_to_string(temp))
+    for pageMode in [6, 7, 8, 11, 13]:
+        outputs.append(tess.image_to_string(temp, lang='eng', config="--dpi 300 --psm {} -c \"tessedit_char_whitelist={}\"".format(pageMode, charList)))
+        if column in [1, 5]:
+            outputs.append(tess.image_to_string(temp, lang='eng', config="--dpi 300 --psm {} --user-words {} -c \"tessedit_char_whitelist={}\"".format(pageMode, userWords, charList)))
 
-    if(outputs.count("") >= 2):  # quick check incase box is looking empty; will only skip if 2/3 or more are blank
+    if Debug:
+        print("debug outputs:", outputs)
+    if (outputs.count("") >= len(outputs)/2):
         if Debug:
-            print("Looks empty")
-        # inverts the threshed image, removes 8px border in case it includes external lines or table borders
-        invert = 255 - temp[8:-8, 8:-8]
-        # countnonzero only counts white pixels, so i need to invert to turn black pixels white
-        pixelCount = cv2.countNonZero(invert)
-        pixelTotal = temp.shape[0] * temp.shape[1]
-
-        if Debug:
-            print("debug blankPercent:", pixelCount/pixelTotal)
-        # will only consider empty if image used less than 1% of pixels. yes, that small
-        if(pixelCount/pixelTotal <= 0.01 or column == 5):
-            if Debug:
-                print("It's Blank")
-            return ""  # Skipping ahead if its already looking like theres nothing
-        else:
-            if Debug:
-                print("we couldnt read it")
-            # if theres enough pixels to describe a possbile image, then it isnt empty, but it cant read it
-            return "RequestCorrection:NaN"
-
-    # Using contrast for more values
-    for i in range(50):
-        temp = cv2.addWeighted(image, (1 + i/100), image, 0, 0)
-        outputs.append(tess.image_to_string(temp))
-    outputs.sort()
-    for i in range(len(outputs)-1, 1, -1):
-        if(outputs[i] == outputs[i-1]):
+            print("we couldnt read it")
+        # if theres enough pixels to describe a possbile image, then it isnt empty, but it cant read it
+        return "RequestCorrection:NaN"
+        
+    for i in range(len(outputs) - 1, -1, -1):
+        if(outputs[i] == ""):
             outputs.pop(i)
 
     ##########################
@@ -496,48 +519,9 @@ def correctValue(image, column, threshold=0.3):
         #######################################
         ## Corrections for names and purpose ##
         #######################################
-        alphaCorrections = {
-            "A": ["^"],  # A
-            "B": ["8", "|3", "/3", "\\3", "13", "&", "6"],  # B
-            "C": ["(", "<", "{", "[", "¢", "©"],  # C G
-            "G": ["(", "<", "{", "[", "¢", "©"],
-            # "D":["|]", "|)"],
-            # "d":["c|", "c/", "c\\"], # D d
-            "E": ["3", "€"],  # E
-            "g": ["9"],  # g
-            # "H":["|-|", "+-+", "++", "4"], # H
-            "I": ["1", "/", "\\", "|", "]", "["],  # I l
-            "l": ["1", "/", "\\", "|", "]", "["],
-            # "K":["|<", "|(", "/<", "/(", "\\<", "\\(", "1<", "1("],  # K
-            "O": ["0"],  # O
-            "S": ["5", "$"],  # S
-            "T": ["7"],  # T
-            # "W":["VV"],  # W
-            # "X":["><", ")("],  # X
-            "Z": ["2"]  # Z
-        }
-
-        template = ""
-        additions = []
-        for word in outputs:
-            template = ""
-            for char in range(len(word)):
-                for i in alphaCorrections:
-                    if word[char] in alphaCorrections[i]:
-                        template += i[0]
-                        break
-                else:
-                    template += word[char]
-            additions.append(template)
-        outputs.extend(additions)
         outputs.sort()
         for i in range(len(outputs)-1, 0, -1):  # Remove duplicate entries
             if(outputs[i] == outputs[i-1]):
-                outputs.pop(i)
-
-        # Removing blank entries. it wasnt considered blank, so it shouldnt be there
-        for i in range(len(outputs) - 1, -1, -1):
-            if(outputs[i] == ""):
                 outputs.pop(i)
 
         if Debug:
@@ -559,7 +543,6 @@ def correctValue(image, column, threshold=0.3):
 
         for i in guesses:
             if(i[0] != check):
-                # print(check, accuracy, score, count)
                 # if the name occurs more often than previous string or the number of accurate characters is more than the length of previous string
                 if((count > closestMatch and accuracy <= len(check)) or score > len(bestGuess)):
                     closestMatch = count
@@ -585,19 +568,6 @@ def correctValue(image, column, threshold=0.3):
         ####################################
         ## Corrections to Dates and Hours ##
         ####################################
-        digitCorrections = {
-            0: ["o", "O", "Q", "C", "c"],  # 0
-            1: ["I", "l", "/", "\\", "|", "[", "]", "(", ")"],  # 1
-            2: ["z", "Z"],  # 2
-            3: ["3", "E"],  # 3
-            4: ["h", "y", "A"],  # 4
-            5: ["s", "S"],  # 5
-            6: ["b", "e"],  # 6
-            7: ["t", ")", "}"],  # 7
-            8: ["B", "&"],  # 8
-            9: ["g", "q"],  # 9
-            ":": ["'", ".", ","]
-        }
         if column in [2, 3]:
             # Source for regex string http://regexlib.com/DisplayPatterns.aspx?cattabindex=4&categoryId=5&AspxAutoDetectCookieSupport=1
             timeFilter = re.compile(
@@ -615,17 +585,10 @@ def correctValue(image, column, threshold=0.3):
                         template = template[:i] + ":" + template[i:]
                     additions.append(template)
                     continue
-            template = ""
-            for char in range(len(word)):
-                for i in digitCorrections:
-                    if word[char] in digitCorrections[i]:
-                        template += str(i)
-                        break
-                else:
-                    template += word[char]
-            if column in [2, 3] and template.isdigit():
+            if column in [2, 3] and word.isdigit():
                 if(len(word) >= 3 and len(word) <= 6):
-                    for i in range(len(template) - 2, 0, -2):
+                    template = word
+                    for i in range(len(word) - 2, 0, -2):
                         template = template[:i] + ":" + template[i:]
             additions.append(template)
         outputs.extend(additions)
