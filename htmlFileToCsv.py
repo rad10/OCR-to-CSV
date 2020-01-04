@@ -41,11 +41,16 @@ tess.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract'
 # Functions
 Debug = False
 
-JSONFile = open("./aliases.json", "r")
-JSON = json.load(JSONFile)
-JSONFile.close()
-JSONChange = False  # this is only used when the database is updated
-
+namesFile = open("config/names.user-words", "r")
+NAMESDICT = namesFile.readlines()
+NAMESDICT.sort()
+namesFile.close()
+namesFile = open("config/names.user-words", "a")
+purposeFile = open("config/purpose.user-words", "r")
+PURPOSEDICT = purposeFile.readlines()
+PURPOSEDICT.sort()
+purposeFile.close()
+purposeFile = open("config/purpose.user-words", "a")
 
 def debug(content):
     if Debug:
@@ -419,8 +424,13 @@ def compareKnownAliases(id, col=1):
     closestMatch = ""
     mostMatches = 0
     matches = 0
+    iterate = []
+    if (col == 1):
+        iterate = NAMESDICT
+    elif(col == 5):
+        iterate = PURPOSEDICT
     if (col == 1 and id.count(" ") == 1):
-        for alias in JSON["names"]["1"]:
+        for alias in iterate:
             matches = 0
             for i in range(min(alias.find(" "), id.find(" "))):
                 if(id[i] == alias[i]):
@@ -434,7 +444,7 @@ def compareKnownAliases(id, col=1):
                 closestMatch = alias
                 mostMatches = matches
     else:
-        for alias in JSON["names"][str(col)]:
+        for alias in iterate:
             matches = 0
             for i in range(min(len(id), len(alias))):
                 if(id[i] == alias[i]):
@@ -711,8 +721,6 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
     @param outputDict: a variable passed by reference instead of using return.\n
     @return a matrix of strings that represents the text in the image dictionary.
     """
-    global JSON
-    global JSONChange
     results = []
     # GUI widgets to manipulate while in middle of function
     if(gui):
@@ -764,15 +772,21 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
                 if (results[-1][row][col][0:18] == "RequestCorrection:"):
                     results[-1][row][col] = requestCorrection(
                         sheet[-1][row + 1][col + 1], col + 1, results[-1][row][col][18:])
-                    if (col + 1 in [1, 5]):
-                        for entry in JSON["names"][str(col + 1)]:
+                    if (col == 0):
+                        for entry in NAMESDICT:
                             if (results[-1][row][col].lower() == entry):
                                 break
                         else:
-                            JSONChange = True
                             # if the name possibly entered in by the user doesnt exist in the database, add it
-                            JSON["names"][str(
-                                col + 1)].append(results[-1][row][col].lower())
+                            NAMESDICT.append(results[-1][row][col].lower())
+                            namesFile.writelines(results[-1][row][col].lower())
+                    elif (col == 4):
+                        for entry in PURPOSEDICT:
+                            if(results[-1][row][col].lower() == entry):
+                                break
+                        else:
+                            PURPOSEDICT.append(results[-1][row][col].lower())
+                            namesFile.writelines(results[-1][row][col].lower())
     if(outputDict == None):
         return results
     else:
@@ -878,13 +892,6 @@ def main():
         raise
     popupTag(
         "Done", "Congrats! its all finished.\nLook at your csv and see if it looks alright.")
-    if (JSONChange):
-        JSON["names"]["1"].sort()  # Sorting new libraries for optimization
-        JSON["names"]["5"].sort()
-        JSONFile = open("aliases.json", "w")
-        json.dump(JSON, JSONFile, indent=4, separators=(
-            ",", ": "), ensure_ascii=True, sort_keys=True)
-        JSONFile.close()
     return
 
 
