@@ -468,6 +468,7 @@ def correctValue(image, column, threshold=0.3):
     However, the best guess may not be accepted if the name doesnt share enough characters in common with all the guesses, then its scrapped and nothing is returned.
     """
     outputs = []
+    unfiltered = []
 
     userWords = ""
     charList = ""
@@ -509,6 +510,8 @@ def correctValue(image, column, threshold=0.3):
         if column in [1, 5]:
             outputs.append(tess.image_to_string(
                 image, lang='eng', config="--dpi 300 --psm {} --user-words {} -c \"tessedit_char_whitelist={}\"".format(pageMode, userWords, charList)))
+        elif column in [2,3]:
+            unfiltered.append(tess.image_to_string(image, lang="eng", config="--dpi 300 --psm {}".format(pageMode)))
 
     # Get black and white results
     temp = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -518,6 +521,8 @@ def correctValue(image, column, threshold=0.3):
         if column in [1, 5]:
             outputs.append(tess.image_to_string(
                 temp, lang='eng', config="--dpi 300 --psm {} --user-words {} -c \"tessedit_char_whitelist={}\"".format(pageMode, userWords, charList)))
+        elif column in [2,3]:
+            unfiltered.append(tess.image_to_string(temp, lang="eng", config="--dpi 300 --psm {}".format(pageMode)))
 
     # get thresh results
     temp = cv2.threshold(
@@ -528,7 +533,8 @@ def correctValue(image, column, threshold=0.3):
         if column in [1, 5]:
             outputs.append(tess.image_to_string(
                 temp, lang='eng', config="--dpi 300 --psm {} --user-words {} -c \"tessedit_char_whitelist={}\"".format(pageMode, userWords, charList)))
-
+        elif column in [2,3]:
+            unfiltered.append(tess.image_to_string(temp, lang="eng", config="--dpi 300 --psm {}".format(pageMode)))
     if Debug:
         print("debug outputs:", outputs)
     if (outputs.count("") >= len(outputs)/2):
@@ -598,13 +604,56 @@ def correctValue(image, column, threshold=0.3):
         ####################################
         ## Corrections to Dates and Hours ##
         ####################################
+        template = ""
+        additions = []
+        correctFormat = []  # the array that will only take in outputs that fit formatting
+        
         if column in [2, 3]:
             # Source for regex string http://regexlib.com/DisplayPatterns.aspx?cattabindex=4&categoryId=5&AspxAutoDetectCookieSupport=1
             timeFilter = re.compile(
                 r'^((([0]?[1-9]|1[0-2])(:|\.)[0-5][0-9]((:|\.)[0-5][0-9])?( )?(AM|am|aM|Am|PM|pm|pM|Pm))|(([0]?[0-9]|1[0-9]|2[0-3])(:|\.)[0-5][0-9]((:|\.)[0-5][0-9])?))$')
+            digitCorrections = {
+                0: ["o", "O", "Q", "C", "c"],  # 0
+                1: ["I", "l", "/", "\\", "|", "[", "]", "(", ")", "{", "}"],  # 1
+                2: ["z", "Z"],  # 2
+                3: ["3", "E"],  # 3
+                4: ["h", "y", "A"],  # 4
+                5: ["s", "S"],  # 5
+                6: ["b", "e"],  # 6
+                7: ["t", ")", "}"],  # 7
+                8: ["B", "&"],  # 8
+                9: ["g", "q"],  # 9
+                ":": ["'", ".", ","]
+            }
+            
+            ## Converting unfiltered text to numbers for time
+            # removing dupes in unflitered search
+            for i in range(len(unfiltered) - 1, 0, -1):
+                if(unfiltered[i-1] == unfiltered[i]):
+                    unfiltered.pop(i)
+            # removing blanks that shouldnt exist
+            for i in range(len(unfiltered) - 1, -1, -1):
+                if(unfiltered[i] == ""):
+                    unfiltered.pop(i)
 
-        template = ""
-        additions = []
+            if Debug:
+                print("debug[unfiltered]:", unfiltered)
+            # straining of text to become words
+            for e in range(4): #running it 4 times incase it needs multiple corrections
+                for i in range(len(unfiltered) - 1, -1, -1): # goes through the entire unfiltered dictionary in reverse
+                    # checking if item is already time or digit incase we can skip it
+                    if(bool(timeFilter.match(unfiltered[i]))): # if the string matches a time, sends it straight to correct values
+                        correctFormat.append(unfiltered[i])
+                        unfiltered.pop(i)
+                    elif(unfiltered[i].isdigit() or unfiltered[i].isdecimal()): # if its a number, goes to outputs for further processing
+                        outputs.append(unfiltered[i])
+                        unfiltered.pop(i)
+                    else: # if it doesnt fit either case, it goes in character by character
+                        for digit, sets in digitCorrections.items():
+                            for elem in sets:
+                                if elem in unfiltered[i]:
+                                    unfiltered.append(unfiltered[i].replace(elem, str(digit)))
+                        unfiltered.pop(i)
         for word in outputs:
             if column in [2, 3] and bool(timeFilter.match(word)):
                 continue
@@ -624,7 +673,6 @@ def correctValue(image, column, threshold=0.3):
         outputs.extend(additions)
         outputs.sort()
 
-        correctFormat = []  # the array that will only take in outputs that fit formatting
         for word in outputs:
             if column in [2, 3] and bool(timeFilter.match(word)):
                 correctFormat.append(word)
