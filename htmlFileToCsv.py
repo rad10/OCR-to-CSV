@@ -398,7 +398,8 @@ def imageScraper(file, outputArray=None):
         for row in horizontalPairs:
             dictionary.append([])
             for col in verticlePairs:
-                dictionary[dictRow].append(table[row[0]+3:row[1]-3, col[0]+3:col[1]-3])
+                dictionary[dictRow].append(
+                    table[row[0]:row[1], col[0]:col[1]])
                 if Debug:
                     cv2.imwrite("debugOutput/dictionary/raw/table{}{}.jpg".format(dictRow,
                                                                                   col[1]-col[0]), table[row[0]+3:row[1]-3, col[0]+3:col[1]-3])
