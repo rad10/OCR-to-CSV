@@ -42,12 +42,12 @@ tess.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract'
 Debug = False
 
 namesFile = open("config/names.user-words", "r")
-NAMESDICT = namesFile.readlines()
+NAMESDICT = namesFile.read().split("\n")
 NAMESDICT.sort()
 namesFile.close()
 namesFile = open("config/names.user-words", "a")
 purposeFile = open("config/purpose.user-words", "r")
-PURPOSEDICT = purposeFile.readlines()
+PURPOSEDICT = purposeFile.read().split("\n")
 PURPOSEDICT.sort()
 purposeFile.close()
 purposeFile = open("config/purpose.user-words", "a")
