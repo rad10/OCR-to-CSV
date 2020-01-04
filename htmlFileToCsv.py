@@ -845,14 +845,14 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
                         else:
                             # if the name possibly entered in by the user doesnt exist in the database, add it
                             NAMESDICT.append(results[-1][row][col].lower())
-                            namesFile.writelines(results[-1][row][col].lower())
+                            namesFile.writelines(results[-1][row][col].lower() + "\n")
                     elif (col == 4):
                         for entry in PURPOSEDICT:
                             if(results[-1][row][col].lower() == entry):
                                 break
                         else:
                             PURPOSEDICT.append(results[-1][row][col].lower())
-                            namesFile.writelines(results[-1][row][col].lower())
+                            namesFile.writelines(results[-1][row][col].lower() + "\n")
     if(outputDict == None):
         return results
     else:
