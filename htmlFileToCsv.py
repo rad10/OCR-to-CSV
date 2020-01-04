@@ -1,7 +1,6 @@
 # import this library to automatically download and install the rest of the libraries if they do not exist
 import tkinter
 from tkinter import filedialog, ttk
-import pip
 from math import floor
 from time import sleep
 import re
@@ -14,10 +13,7 @@ try:
     import numpy as nm
     import cv2
 except ImportError:
-    if(hasattr(pip, "main")):
-        pip.main(["install", "opencv-python"])
-    else:
-        pip._internal.main(["install", "opencv-python"])
+    os.system("pip install opencv-python")
     import numpy as nm
     import cv2
 try:
@@ -30,12 +26,12 @@ except ImportError:
 try:
     import pytesseract as tess
 except ImportError:
-    if(hasattr(pip, "main")):
-        pip.main(["install", "pytesseract"])
-    else:
-        pip._internal.main(["install", "pytesseract"])
+    os.system("pip install pytesseract")
     import pytesseract as tess
 tess.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract'
+# TODO: Add popup if tesseract library doesnt exist
+# TODO: -- if program is already installed but not in expected location, ask for location of tesseract, and place it in path
+
 
 
 # Functions
