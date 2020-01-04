@@ -51,6 +51,7 @@ PURPOSEDICT.sort()
 purposeFile.close()
 purposeFile = open("config/purpose.user-words", "a")
 
+
 def debug(content):
     if Debug:
         print(content)
@@ -482,7 +483,8 @@ def correctValue(image, column, threshold=0.3):
 
     # inverts the threshed image, removes 8px border in case it includes external lines or table borders
     invert = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    invert = cv2.threshold(invert, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
+    invert = cv2.threshold(
+        invert, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
     invert = 255 - invert[8:-8, 8:-8]
     # countnonzero only counts white pixels, so i need to invert to turn black pixels white
     pixelCount = cv2.countNonZero(invert)
@@ -501,24 +503,30 @@ def correctValue(image, column, threshold=0.3):
 
     # Get normal results
     for pageMode in [6, 7, 8, 11, 13]:
-        outputs.append(tess.image_to_string(image, lang='eng', config="--dpi 300 --psm {} -c \"tessedit_char_whitelist={}\"".format(pageMode, charList)))
+        outputs.append(tess.image_to_string(
+            image, lang='eng', config="--dpi 300 --psm {} -c \"tessedit_char_whitelist={}\"".format(pageMode, charList)))
         if column in [1, 5]:
-            outputs.append(tess.image_to_string(image, lang='eng', config="--dpi 300 --psm {} --user-words {} -c \"tessedit_char_whitelist={}\"".format(pageMode, userWords, charList)))
+            outputs.append(tess.image_to_string(
+                image, lang='eng', config="--dpi 300 --psm {} --user-words {} -c \"tessedit_char_whitelist={}\"".format(pageMode, userWords, charList)))
 
     # Get black and white results
     temp = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     for pageMode in [6, 7, 8, 11, 13]:
-        outputs.append(tess.image_to_string(temp, lang='eng', config="--dpi 300 --psm {} -c \"tessedit_char_whitelist={}\"".format(pageMode, charList)))
+        outputs.append(tess.image_to_string(
+            temp, lang='eng', config="--dpi 300 --psm {} -c \"tessedit_char_whitelist={}\"".format(pageMode, charList)))
         if column in [1, 5]:
-            outputs.append(tess.image_to_string(temp, lang='eng', config="--dpi 300 --psm {} --user-words {} -c \"tessedit_char_whitelist={}\"".format(pageMode, userWords, charList)))
+            outputs.append(tess.image_to_string(
+                temp, lang='eng', config="--dpi 300 --psm {} --user-words {} -c \"tessedit_char_whitelist={}\"".format(pageMode, userWords, charList)))
 
     # get thresh results
     temp = cv2.threshold(
         temp, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
     for pageMode in [6, 7, 8, 11, 13]:
-        outputs.append(tess.image_to_string(temp, lang='eng', config="--dpi 300 --psm {} -c \"tessedit_char_whitelist={}\"".format(pageMode, charList)))
+        outputs.append(tess.image_to_string(
+            temp, lang='eng', config="--dpi 300 --psm {} -c \"tessedit_char_whitelist={}\"".format(pageMode, charList)))
         if column in [1, 5]:
-            outputs.append(tess.image_to_string(temp, lang='eng', config="--dpi 300 --psm {} --user-words {} -c \"tessedit_char_whitelist={}\"".format(pageMode, userWords, charList)))
+            outputs.append(tess.image_to_string(
+                temp, lang='eng', config="--dpi 300 --psm {} --user-words {} -c \"tessedit_char_whitelist={}\"".format(pageMode, userWords, charList)))
 
     if Debug:
         print("debug outputs:", outputs)
@@ -527,7 +535,7 @@ def correctValue(image, column, threshold=0.3):
             print("we couldnt read it")
         # if theres enough pixels to describe a possbile image, then it isnt empty, but it cant read it
         return "RequestCorrection:NaN"
-        
+
     for i in range(len(outputs) - 1, -1, -1):
         if(outputs[i] == ""):
             outputs.pop(i)
