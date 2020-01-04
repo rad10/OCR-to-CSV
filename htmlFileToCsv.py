@@ -41,7 +41,11 @@ except ImportError:
 
 
 # Functions
-Debug = False
+if Debug and not os.path.exists("debugOutput/."):
+    os.makedirs("debugOutput/dictionary", exist_ok=True)
+    os.makedirs("debugOutput/scrapper", exist_ok=True)
+elif Debug:
+    os.system("del /s debugOutput\\*.jpg")
 
 JSONFile = open("./aliases.json", "r")
 JSON = json.load(JSONFile)
