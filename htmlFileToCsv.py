@@ -19,8 +19,7 @@ except ImportError:
 try:
     from PIL import Image, ImageTk
 except ImportError:
-    import Image
-    import ImageTk
+    import Image, ImageTk
 
 # if tesseract isnt installed, itll install it for you
 try:
@@ -32,6 +31,13 @@ tess.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract'
 # TODO: Add popup if tesseract library doesnt exist
 # TODO: -- if program is already installed but not in expected location, ask for location of tesseract, and place it in path
 
+# installing pdf to image libraries
+try:
+    from pdf2image import convert_from_path
+except ImportError:
+    os.system("pip install pdf2image")
+    from pdf2image import convert_from_path
+# TODO: Add popup to check if poppler.exe exists
 
 
 # Functions
@@ -174,7 +180,6 @@ def imageScraper(file, outputArray=None):
     elif not (os.path.exists(file)):
         raise FileNotFoundError("File given does not exist.")
     if file.split(".")[1] == "pdf":
-        from pdf2image import convert_from_path
         for image in convert_from_path(file):
             image = nm.array(image)
             image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
