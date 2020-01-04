@@ -47,12 +47,10 @@ Temporary Items
 .apdisk
 
 # Example test data used for testing script
-sheet1_files/
-sheet2_files/
-sheet1.html
-sheet2.html
+debugOutput/
 .vscode/ipch/
-namse.csv
+names.csv
+aliases.json
 
 # Program file exclusions
 *.pyc
