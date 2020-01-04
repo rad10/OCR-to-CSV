@@ -504,7 +504,7 @@ def correctValue(image, column, threshold=0.3):
     del pixelTotal
 
     # Get normal results
-    for pageMode in [6, 7, 8, 11, 13]:
+    for pageMode in [3, 6, 7, 8, 11, 13]:
         outputs.append(tess.image_to_string(
             image, lang='eng', config="--dpi 300 --psm {} -c \"tessedit_char_whitelist={}\"".format(pageMode, charList)))
         if column in [1, 5]:
@@ -515,7 +515,7 @@ def correctValue(image, column, threshold=0.3):
 
     # Get black and white results
     temp = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    for pageMode in [6, 7, 8, 11, 13]:
+    for pageMode in [3, 6, 7, 8, 11, 13]:
         outputs.append(tess.image_to_string(
             temp, lang='eng', config="--dpi 300 --psm {} -c \"tessedit_char_whitelist={}\"".format(pageMode, charList)))
         if column in [1, 5]:
@@ -527,7 +527,7 @@ def correctValue(image, column, threshold=0.3):
     # get thresh results
     temp = cv2.threshold(
         temp, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
-    for pageMode in [6, 7, 8, 11, 13]:
+    for pageMode in [3, 6, 7, 8, 11, 13]:
         outputs.append(tess.image_to_string(
             temp, lang='eng', config="--dpi 300 --psm {} -c \"tessedit_char_whitelist={}\"".format(pageMode, charList)))
         if column in [1, 5]:
