@@ -867,8 +867,15 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
 
         # Collecting dates on page first
         dates = []
+        dformat = re.compile(r'\d{1,2}\/\d{1,2}\/(\d{4}|\d{2})')
+        dstr = ""
         for date in sheet[:-1]:
-            dates.append(tess.image_to_string(date))
+            dstr = tess.image_to_string(date).replace("\n", "").replace(" ", "")
+            if (bool(dformat.match(dstr))):
+                dates.insert(0, dstr)
+            else:
+                dates.append(dstr)
+            
         # | Full name | Time in | Time out | hours (possibly blank) | purpose | date | day (possibly blank) |
         for row in sheet[-1][1:]:  # skips first row which is dummy
             if gui:
