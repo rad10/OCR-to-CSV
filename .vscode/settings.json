@@ -3,12 +3,10 @@
     "python.linting.pylintEnabled": true,
     "python.analysis.openFilesOnly": true,
     "python.analysis.disabled": [
-        "no-member",
-        "line-too-long",
-        "superfluous-parens"
+        "no-member"
     ],
     "python.linting.pylintArgs": [
-        "--disable=no-member,line-too-long,superfluous-parens"
+        "--disable=no-member"
     ],
     "files.defaultLanguage": "python",
     "files.exclude": {

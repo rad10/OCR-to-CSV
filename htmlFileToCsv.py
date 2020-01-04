@@ -5,6 +5,7 @@ import pip
 from math import floor
 from time import sleep
 import re
+import json
 
 # if opencv isnt installed, it'll install it for you
 from sys import argv
@@ -40,16 +41,10 @@ tess.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract'
 # Functions
 Debug = False
 
-namesFile = open("config/names.user-words", "r")
-NAMESDICT = namesFile.read().split("\n")
-NAMESDICT.sort()
-namesFile.close()
-namesFile = open("config/names.user-words", "a")
-purposeFile = open("config/purpose.user-words", "r")
-PURPOSEDICT = purposeFile.read().split("\n")
-PURPOSEDICT.sort()
-purposeFile.close()
-purposeFile = open("config/purpose.user-words", "a")
+JSONFile = open("./aliases.json", "r")
+JSON = json.load(JSONFile)
+JSONFile.close()
+JSONChange = False  # this is only used when the database is updated
 
 
 def debug(content):
@@ -398,11 +393,10 @@ def imageScraper(file, outputArray=None):
         for row in horizontalPairs:
             dictionary.append([])
             for col in verticlePairs:
-                dictionary[dictRow].append(
-                    table[row[0]:row[1], col[0]:col[1]])
+                dictionary[dictRow].append(table[row[0]:row[1], col[0]:col[1]])
                 if Debug:
                     cv2.imwrite("debugOutput/dictionary/raw/table{}{}.jpg".format(dictRow,
-                                                                                  col[1]-col[0]), table[row[0]+3:row[1]-3, col[0]+3:col[1]-3])
+                                                                                  col[1]-col[0]), table[row[0]:row[1], col[0]:col[1]])
             dictRow += 1
 
     if(outputArray == None):
@@ -425,34 +419,17 @@ def compareKnownAliases(id, col=1):
     closestMatch = ""
     mostMatches = 0
     matches = 0
-    iterate = []
-    if (col == 1):
-        iterate = NAMESDICT
-    elif(col == 5):
-        iterate = PURPOSEDICT
-    if (col == 1 and id.count(" ") == 1):
-        for alias in iterate:
-            matches = 0
-            for i in range(min(alias.find(" "), id.find(" "))):
+    for alias in JSON["names"][str(col)]:
+        matches = 0
+        for i in range(max(len(id), len(alias))):
+            try:
                 if(id[i] == alias[i]):
                     matches += 1
-            lalias = alias.find(" ") + 1
-            lid = id.find(" ") + 1
-            for i in range(min(len(alias) - lalias, len(id) - lid)):
-                if(id[lid + i] == alias[lalias + i]):
-                    matches += 1
-            if (matches > mostMatches):
-                closestMatch = alias
-                mostMatches = matches
-    else:
-        for alias in iterate:
-            matches = 0
-            for i in range(min(len(id), len(alias))):
-                if(id[i] == alias[i]):
-                    matches += 1
-            if (matches > mostMatches):
-                closestMatch = alias
-                mostMatches = matches
+            except IndexError:
+                break
+        if (matches > mostMatches):
+            closestMatch = alias
+            mostMatches = matches
     return closestMatch, mostMatches
 
 
@@ -468,77 +445,47 @@ def correctValue(image, column, threshold=0.3):
     However, the best guess may not be accepted if the name doesnt share enough characters in common with all the guesses, then its scrapped and nothing is returned.
     """
     outputs = []
-
-    userWords = ""
-    charList = ""
-    if (column == 1):
-        userWords = "config/names.user-words"
-        charList = "abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    elif column in [2, 3]:
-        charList = "0123456789:"
-    elif (column == 4):
-        charList = "0123456789"
-    elif (column == 5):
-        userWords = "config/purpose.user-words"
-        charList = "abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ-/"
-
-    # inverts the threshed image, removes 8px border in case it includes external lines or table borders
-    invert = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    invert = cv2.threshold(
-        invert, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
-    invert = 255 - invert[8:-8, 8:-8]
-    # countnonzero only counts white pixels, so i need to invert to turn black pixels white
-    pixelCount = cv2.countNonZero(invert)
-    pixelTotal = image.shape[0] * image.shape[1]
-
-    if Debug:
-        print("debug blankPercent:", pixelCount/pixelTotal)
-    # will only consider empty if image used less than 1% of pixels. yes, that small
-    if(pixelCount/pixelTotal <= 0.01 or column == 5):
-        if Debug:
-            print("It's Blank")
-        return ""  # Skipping ahead if its already looking like theres nothing
-    del invert
-    del pixelCount
-    del pixelTotal
-
     # Get normal results
-    for pageMode in [6, 7, 8, 11, 13]:
-        outputs.append(tess.image_to_string(
-            image, lang='eng', config="--dpi 300 --psm {} -c \"tessedit_char_whitelist={}\"".format(pageMode, charList)))
-        if column in [1, 5]:
-            outputs.append(tess.image_to_string(
-                image, lang='eng', config="--dpi 300 --psm {} --user-words {} -c \"tessedit_char_whitelist={}\"".format(pageMode, userWords, charList)))
+    outputs.append(tess.image_to_string(image))
 
     # Get black and white results
     temp = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    for pageMode in [6, 7, 8, 11, 13]:
-        outputs.append(tess.image_to_string(
-            temp, lang='eng', config="--dpi 300 --psm {} -c \"tessedit_char_whitelist={}\"".format(pageMode, charList)))
-        if column in [1, 5]:
-            outputs.append(tess.image_to_string(
-                temp, lang='eng', config="--dpi 300 --psm {} --user-words {} -c \"tessedit_char_whitelist={}\"".format(pageMode, userWords, charList)))
+    outputs.append(tess.image_to_string(temp))
 
     # get thresh results
     temp = cv2.threshold(
         temp, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
-    for pageMode in [6, 7, 8, 11, 13]:
-        outputs.append(tess.image_to_string(
-            temp, lang='eng', config="--dpi 300 --psm {} -c \"tessedit_char_whitelist={}\"".format(pageMode, charList)))
-        if column in [1, 5]:
-            outputs.append(tess.image_to_string(
-                temp, lang='eng', config="--dpi 300 --psm {} --user-words {} -c \"tessedit_char_whitelist={}\"".format(pageMode, userWords, charList)))
+    outputs.append(tess.image_to_string(temp))
 
-    if Debug:
-        print("debug outputs:", outputs)
-    if (outputs.count("") >= len(outputs)/2):
+    if(outputs.count("") >= 2):  # quick check incase box is looking empty; will only skip if 2/3 or more are blank
         if Debug:
-            print("we couldnt read it")
-        # if theres enough pixels to describe a possbile image, then it isnt empty, but it cant read it
-        return "RequestCorrection:NaN"
+            print("Looks empty")
+        # inverts the threshed image, removes 8px border in case it includes external lines or table borders
+        invert = 255 - temp[8:-8, 8:-8]
+        # countnonzero only counts white pixels, so i need to invert to turn black pixels white
+        pixelCount = cv2.countNonZero(invert)
+        pixelTotal = temp.shape[0] * temp.shape[1]
 
-    for i in range(len(outputs) - 1, -1, -1):
-        if(outputs[i] == ""):
+        if Debug:
+            print("debug blankPercent:", pixelCount/pixelTotal)
+        # will only consider empty if image used less than 1% of pixels. yes, that small
+        if(pixelCount/pixelTotal <= 0.01 or column == 5):
+            if Debug:
+                print("It's Blank")
+            return ""  # Skipping ahead if its already looking like theres nothing
+        else:
+            if Debug:
+                print("we couldnt read it")
+            # if theres enough pixels to describe a possbile image, then it isnt empty, but it cant read it
+            return "RequestCorrection:NaN"
+
+    # Using contrast for more values
+    for i in range(50):
+        temp = cv2.addWeighted(image, (1 + i/100), image, 0, 0)
+        outputs.append(tess.image_to_string(temp))
+    outputs.sort()
+    for i in range(len(outputs)-1, 1, -1):
+        if(outputs[i] == outputs[i-1]):
             outputs.pop(i)
 
     ##########################
@@ -549,9 +496,48 @@ def correctValue(image, column, threshold=0.3):
         #######################################
         ## Corrections for names and purpose ##
         #######################################
+        alphaCorrections = {
+            "A": ["^"],  # A
+            "B": ["8", "|3", "/3", "\\3", "13", "&", "6"],  # B
+            "C": ["(", "<", "{", "[", "¢", "©"],  # C G
+            "G": ["(", "<", "{", "[", "¢", "©"],
+            # "D":["|]", "|)"],
+            # "d":["c|", "c/", "c\\"], # D d
+            "E": ["3", "€"],  # E
+            "g": ["9"],  # g
+            # "H":["|-|", "+-+", "++", "4"], # H
+            "I": ["1", "/", "\\", "|", "]", "["],  # I l
+            "l": ["1", "/", "\\", "|", "]", "["],
+            # "K":["|<", "|(", "/<", "/(", "\\<", "\\(", "1<", "1("],  # K
+            "O": ["0"],  # O
+            "S": ["5", "$"],  # S
+            "T": ["7"],  # T
+            # "W":["VV"],  # W
+            # "X":["><", ")("],  # X
+            "Z": ["2"]  # Z
+        }
+
+        template = ""
+        additions = []
+        for word in outputs:
+            template = ""
+            for char in range(len(word)):
+                for i in alphaCorrections:
+                    if word[char] in alphaCorrections[i]:
+                        template += i[0]
+                        break
+                else:
+                    template += word[char]
+            additions.append(template)
+        outputs.extend(additions)
         outputs.sort()
         for i in range(len(outputs)-1, 0, -1):  # Remove duplicate entries
             if(outputs[i] == outputs[i-1]):
+                outputs.pop(i)
+
+        # Removing blank entries. it wasnt considered blank, so it shouldnt be there
+        for i in range(len(outputs) - 1, -1, -1):
+            if(outputs[i] == ""):
                 outputs.pop(i)
 
         if Debug:
@@ -573,6 +559,7 @@ def correctValue(image, column, threshold=0.3):
 
         for i in guesses:
             if(i[0] != check):
+                # print(check, accuracy, score, count)
                 # if the name occurs more often than previous string or the number of accurate characters is more than the length of previous string
                 if((count > closestMatch and accuracy <= len(check)) or score > len(bestGuess)):
                     closestMatch = count
@@ -598,6 +585,19 @@ def correctValue(image, column, threshold=0.3):
         ####################################
         ## Corrections to Dates and Hours ##
         ####################################
+        digitCorrections = {
+            0: ["o", "O", "Q", "C", "c"],  # 0
+            1: ["I", "l", "/", "\\", "|", "[", "]", "(", ")"],  # 1
+            2: ["z", "Z"],  # 2
+            3: ["3", "E"],  # 3
+            4: ["h", "y", "A"],  # 4
+            5: ["s", "S"],  # 5
+            6: ["b", "e"],  # 6
+            7: ["t", ")", "}"],  # 7
+            8: ["B", "&"],  # 8
+            9: ["g", "q"],  # 9
+            ":": ["'", ".", ","]
+        }
         if column in [2, 3]:
             # Source for regex string http://regexlib.com/DisplayPatterns.aspx?cattabindex=4&categoryId=5&AspxAutoDetectCookieSupport=1
             timeFilter = re.compile(
@@ -615,10 +615,17 @@ def correctValue(image, column, threshold=0.3):
                         template = template[:i] + ":" + template[i:]
                     additions.append(template)
                     continue
-            if column in [2, 3] and word.isdigit():
+            template = ""
+            for char in range(len(word)):
+                for i in digitCorrections:
+                    if word[char] in digitCorrections[i]:
+                        template += str(i)
+                        break
+                else:
+                    template += word[char]
+            if column in [2, 3] and template.isdigit():
                 if(len(word) >= 3 and len(word) <= 6):
-                    template = word
-                    for i in range(len(word) - 2, 0, -2):
+                    for i in range(len(template) - 2, 0, -2):
                         template = template[:i] + ":" + template[i:]
             additions.append(template)
         outputs.extend(additions)
@@ -729,6 +736,8 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
     @param outputDict: a variable passed by reference instead of using return.\n
     @return a matrix of strings that represents the text in the image dictionary.
     """
+    global JSON
+    global JSONChange
     results = []
     # GUI widgets to manipulate while in middle of function
     if(gui):
@@ -754,15 +763,8 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
 
         # Collecting dates on page first
         dates = []
-        dformat = re.compile(r'\d{1,2}\/\d{1,2}\/(\d{4}|\d{2})')
-        dstr = ""
         for date in sheet[:-1]:
-            dstr = tess.image_to_string(date).replace("\n", "").replace(" ", "")
-            if (bool(dformat.match(dstr))):
-                dates.insert(0, dstr)
-            else:
-                dates.append(dstr)
-            
+            dates.append(tess.image_to_string(date))
         # | Full name | Time in | Time out | hours (possibly blank) | purpose | date | day (possibly blank) |
         for row in sheet[-1][1:]:  # skips first row which is dummy
             if gui:
@@ -777,10 +779,7 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
                 if(temp == None):  # the correction failed. the user must return the correction
                     temp = "RequestCorrection"
                 results[-1][-1].append(temp)
-            if(results[-1][-1].count("") == len(results[-1][-1])):
-                results[-1].pop(-1)
-            else:
-                results[-1][-1].extend(dates)
+            results[-1][-1].extend(dates)
 
         if Debug:
             print("Debug Results:", results)
@@ -790,21 +789,15 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
                 if (results[-1][row][col][0:18] == "RequestCorrection:"):
                     results[-1][row][col] = requestCorrection(
                         sheet[-1][row + 1][col + 1], col + 1, results[-1][row][col][18:])
-                    if (col == 0):
-                        for entry in NAMESDICT:
+                    if (col + 1 in [1, 5]):
+                        for entry in JSON["names"][str(col + 1)]:
                             if (results[-1][row][col].lower() == entry):
                                 break
                         else:
+                            JSONChange = True
                             # if the name possibly entered in by the user doesnt exist in the database, add it
-                            NAMESDICT.append(results[-1][row][col].lower())
-                            namesFile.writelines(results[-1][row][col].lower())
-                    elif (col == 4):
-                        for entry in PURPOSEDICT:
-                            if(results[-1][row][col].lower() == entry):
-                                break
-                        else:
-                            PURPOSEDICT.append(results[-1][row][col].lower())
-                            namesFile.writelines(results[-1][row][col].lower())
+                            JSON["names"][str(
+                                col + 1)].append(results[-1][row][col].lower())
     if(outputDict == None):
         return results
     else:
@@ -910,6 +903,13 @@ def main():
         raise
     popupTag(
         "Done", "Congrats! its all finished.\nLook at your csv and see if it looks alright.")
+    if (JSONChange):
+        JSON["names"]["1"].sort()  # Sorting new libraries for optimization
+        JSON["names"]["5"].sort()
+        JSONFile = open("aliases.json", "w")
+        json.dump(JSON, JSONFile, indent=4, separators=(
+            ",", ": "), ensure_ascii=True, sort_keys=True)
+        JSONFile.close()
     return
 
 
