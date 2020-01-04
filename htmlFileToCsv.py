@@ -890,7 +890,10 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
                 if(temp == None):  # the correction failed. the user must return the correction
                     temp = "RequestCorrection"
                 results[-1][-1].append(temp)
-            results[-1][-1].extend(dates)
+            if(results[-1][-1].count("") == len(results[-1][-1])):
+                results[-1].pop(-1)
+            else:
+                results[-1][-1].extend(dates)
 
         if Debug:
             print("Debug Results:", results)
