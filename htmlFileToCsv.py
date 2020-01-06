@@ -18,6 +18,9 @@ except ImportError:
     import cv2
 try:
     from PIL import Image, ImageTk
+except ModuleNotFoundError:
+    os.system("pip install pillow")
+    from PIL import Image, ImageTk
 except ImportError:
     import Image, ImageTk
 
