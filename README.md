@@ -14,6 +14,7 @@ This is special thanks for the sources and libraries used to build this thing
  - [Tesseract OCR](https://github.com/tesseract-ocr/tesseract)
  - [OpenCV](https://opencv.org/)
  - [TKinter](https://docs.python.org/3/library/tkinter.html)
+ - [Poppler](https://poppler.freedesktop.org/)
 ### Sources:
 The sources that helped me figure out how to do several of the things i needed to do.
  - [StackExchange](https://stackexchange.com/) (There are too many articles used for me to link)
@@ -22,7 +23,7 @@ The sources that helped me figure out how to do several of the things i needed t
 
 ## Python
 The python variation of this application was the original version of this program. It works best and is the most up to date.
-> tested with `Python 3.6.4`
+> tested with `Python 3.8.1`
 
 ### Libraries Used:
 
@@ -30,5 +31,6 @@ The python variation of this application was the original version of this progra
  - [opencv-python](https://pypi.org/project/opencv-python/)
  - [tkinter](https://docs.python.org/3/library/tkinter.html)
  - ImageTk
+ - [pdf2image](https://github.com/Belval/pdf2image)
 
 This variant contains internal `debug()` methods that will activate when `Debug = True` to see what values are in script. (or you can use breakpoints for debugging.)
