@@ -27,17 +27,90 @@ try:
 except ImportError:
     os.system("pip install pytesseract")
     import pytesseract as tess
-tess.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract'
-# TODO: Add popup if tesseract library doesnt exist
-# TODO: -- if program is already installed but not in expected location, ask for location of tesseract, and place it in path
-
 # installing pdf to image libraries
 try:
     from pdf2image import convert_from_path
 except ImportError:
     os.system("pip install pdf2image")
     from pdf2image import convert_from_path
-# TODO: Add popup to check if poppler.exe exists
+
+### Checking that external software is installed and ready to use
+def installError(name, URL, filename):
+    def download():
+        import webbrowser
+        webbrowser.open(URL, autoraise=True)
+
+    def navigate():
+        path = filedialog.askopenfilename(
+            filetypes=((name, filename), (name, filename)))
+        if(os.getenv("path")[-1] != ";"):
+            path = ";" + path
+        path = path.replace("/", "\\").replace("\\" + filename, "")
+        if(len(os.getenv("path") + path) >= 1024):
+            info0.configure(
+                text="Error: we could not add the file to your path for you. You will have to do this manually.")
+        if os.getenv("userprofile") in path:
+            if(os.system("setx PATH \"%path%" + path + "\"")):
+                print("Failed to do command")
+        else:
+            if(os.system("setx PATH /M \"%path%" + path + "\"")):
+                print("failed to do command")
+
+    ie = tkinter.Tk(baseName="Missing Software")
+    ie.title("Missing Software")
+    ie.geometry("438x478")
+    ie.minsize(120, 1)
+    ie.maxsize(1370, 749)
+    ie.resizable(1, 1)
+    ie.configure(background="#d9d9d9")
+    font11 = "-family {Segoe UI} -size 18 -weight bold"
+    font13 = "-family {Segoe UI} -size 16 -weight bold"
+    Header = tkinter.Label(ie, text="Software Not Installed")
+    Header.place(relx=0.16, rely=0.042, height=61, width=294)
+    Header.configure(font=font11, activeforeground="#372fd7", background="#d9d9d9",
+                     disabledforeground="#a3a3a3", foreground="#2432d9")
+    info0 = tkinter.Label(
+        ie, text="Warning: Youre missing {name}. it is a required software to make this tool run. To fix this issue, please follow the instructions below.".format(name=name))
+    info0.place(relx=0.16, rely=0.167, height=151, width=294)
+    info0.configure(font="-family {Segoe UI} -size 14", background="#ffffff",
+                    disabledforeground="#a3a3a3", foreground="#000000", wraplength="294")
+    info1 = tkinter.Label(
+        ie, text="If you havent already installed this software, please follow the download link.")
+    info1.place(relx=0.16, rely=0.523, height=31, width=294)
+    info1.configure(background="#eeeeee", disabledforeground="#a3a3a3",
+                    foreground="#000000", wraplength="294")
+    tor = tkinter.Label(ie, text="Or")
+    tor.place(relx=0.457, rely=0.69, height=36, width=40)
+    tor.configure(font="-family {Segoe UI} -size 16 -weight bold",
+                  background="#d9d9d9", disabledforeground="#a3a3a3", foreground="#29c1dc")
+    info2 = tkinter.Label(
+        ie, text="If you've already installed the software, please lead us to where it is as we cannot find it.")
+    info2.place(relx=0.16, rely=0.774, height=41, width=294)
+    info2.configure(background="#eeeeee", wraplength="294",
+                    disabledforeground="#a3a3a3", foreground="#000000")
+    download = tkinter.Button(
+        ie, text="Download {name}".format(name=name), command=download)
+    download.place(relx=0.16, rely=0.607, height=34, width=297)
+    download.configure(font=font11, activebackground="#ececec", activeforeground="#000000", background="#48d250",
+                       disabledforeground="#a3a3a3", foreground="#000000", highlightbackground="#d9d9d9", highlightcolor="black", pady="0")
+    navigate = tkinter.Button(
+        ie, text="Navigate to {name}".format(name=name), command=navigate)
+    navigate.place(relx=0.16, rely=0.879, height=34, width=297)
+    navigate.configure(font=font13, activebackground="#ececec", activeforeground="#000000", background="#eaecec",
+                       disabledforeground="#a3a3a3", foreground="#000000", highlightbackground="#d9d9d9", highlightcolor="black", pady="0")
+
+    ie.mainloop()
+    os.sys.exit(1)
+# check if tesseract exists
+if not os.system("tesseract --help"):
+    if os.path.exists("C:\\Program Files\\Tesseract-OCR\\tesseract.exe"):
+        tess.pytesseract.tesseract_cmd = r'C:\\Program Files\\Tesseract-OCR\\tesseract'
+    else:
+        installError("Tesseract", "https://github.com/UB-Mannheim/tesseract/releases", "tesseract.exe")
+# check if poppler exists
+if not os.system("pdfimages --help"):
+    installError("Poppler", "https://poppler.freedesktop.org/", "pdfimages.exe")
+del installError
 
 
 # Functions
