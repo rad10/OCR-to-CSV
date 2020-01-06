@@ -13,13 +13,15 @@ try:
     import numpy as nm
     import cv2
 except ImportError:
-    os.system("pip install opencv-python")
+    if(os.system("pip install opencv-python")):
+        os.system("pip install --user opencv-python")
     import numpy as nm
     import cv2
 try:
     from PIL import Image, ImageTk
 except ModuleNotFoundError:
-    os.system("pip install pillow")
+    if(os.system("pip install pillow")):
+        os.system("pip install --user pillow")
     from PIL import Image, ImageTk
 except ImportError:
     import Image, ImageTk
@@ -28,13 +30,15 @@ except ImportError:
 try:
     import pytesseract as tess
 except ImportError:
-    os.system("pip install pytesseract")
+    if(os.system("pip install pytesseract")):
+        os.system("pip install --user pytesseract")
     import pytesseract as tess
 # installing pdf to image libraries
 try:
     from pdf2image import convert_from_path
 except ImportError:
-    os.system("pip install pdf2image")
+    if(os.system("pip install pdf2image")):
+        os.system("pip install --user pdf2image")
     from pdf2image import convert_from_path
 
 ### Checking that external software is installed and ready to use
