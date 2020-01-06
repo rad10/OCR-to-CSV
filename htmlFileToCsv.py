@@ -109,13 +109,13 @@ def installError(name, URL, filename):
     ie.mainloop()
     os.sys.exit(1)
 # check if tesseract exists
-if not os.system("tesseract --help"):
+if os.system("tesseract --help"):
     if os.path.exists("C:\\Program Files\\Tesseract-OCR\\tesseract.exe"):
         tess.pytesseract.tesseract_cmd = r'C:\\Program Files\\Tesseract-OCR\\tesseract'
     else:
         installError("Tesseract", "https://github.com/UB-Mannheim/tesseract/releases", "tesseract.exe")
 # check if poppler exists
-if not os.system("pdfimages -help"):
+if os.system("pdfimages -help"):
     installError("Poppler", "https://poppler.freedesktop.org/", "pdfimages.exe")
 del installError
 
