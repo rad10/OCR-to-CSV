@@ -30,7 +30,7 @@ The python variation of this application was the original version of this progra
  - [pytesseract](https://pypi.org/project/pytesseract/)
  - [opencv-python](https://pypi.org/project/opencv-python/)
  - [tkinter](https://docs.python.org/3/library/tkinter.html)
- - ImageTk
+ - [Pillow](https://pypi.org/project/Pillow/2.2.1/)
  - [pdf2image](https://github.com/Belval/pdf2image)
 
 This variant contains internal `debug()` methods that will activate when `Debug = True` to see what values are in script. (or you can use breakpoints for debugging.)
