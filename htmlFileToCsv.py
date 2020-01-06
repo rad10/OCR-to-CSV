@@ -108,7 +108,7 @@ if not os.system("tesseract --help"):
     else:
         installError("Tesseract", "https://github.com/UB-Mannheim/tesseract/releases", "tesseract.exe")
 # check if poppler exists
-if not os.system("pdfimages --help"):
+if not os.system("pdfimages -help"):
     installError("Poppler", "https://poppler.freedesktop.org/", "pdfimages.exe")
 del installError
 
