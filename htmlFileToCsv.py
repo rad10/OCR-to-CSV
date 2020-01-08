@@ -543,6 +543,26 @@ def correctValue(image, column, threshold=0.3):
     The last step is for it take all the new unique strings and run them through another function to see which names the strings closest resemble. The name with the most conclusions is considered the best guess.\n
     However, the best guess may not be accepted if the name doesnt share enough characters in common with all the guesses, then its scrapped and nothing is returned.
     """
+
+    # Running initial checks to see if cell is empty
+    # were creating an inverted thresh of the image for counting pixels, removes 8px border in case it includes external lines or table borders
+    invert = cv2.cvtColor(image[8: -8, 8: -8], cv2.COLOR_BGR2GRAY)
+    invert = cv2.threshold(
+        invert, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
+    invert = 255 - invert
+    # countnonzero only counts white pixels, so i need to invert to turn black pixels white
+    pixelCount = cv2.countNonZero(invert)
+    pixelTotal = invert.shape[0] * invert.shape[1]
+
+    if Debug:
+        print("debug blankPercent:", pixelCount/pixelTotal)
+    # will only consider empty if image used less than 1% of pixels. yes, that small
+    if(pixelCount/pixelTotal <= 0.01):
+        if Debug:
+            print("It's Blank")
+        return ""  # Skipping ahead if its already looking like theres nothing
+    del invert, pixelCount, pixelTotal
+
     outputs = []
     # Get normal results
     outputs.append(tess.image_to_string(image))
@@ -556,27 +576,12 @@ def correctValue(image, column, threshold=0.3):
         temp, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
     outputs.append(tess.image_to_string(temp))
 
-    if(outputs.count("") >= 2):  # quick check incase box is looking empty; will only skip if 2/3 or more are blank
+    # quick check incase box is looking empty; will only skip if 2/3 or more are blank
+    if(outputs.count("") >= len(outputs)*0.5):
         if Debug:
-            print("Looks empty")
-        # inverts the threshed image, removes 8px border in case it includes external lines or table borders
-        invert = 255 - temp[8:-8, 8:-8]
-        # countnonzero only counts white pixels, so i need to invert to turn black pixels white
-        pixelCount = cv2.countNonZero(invert)
-        pixelTotal = temp.shape[0] * temp.shape[1]
-
-        if Debug:
-            print("debug blankPercent:", pixelCount/pixelTotal)
-        # will only consider empty if image used less than 1% of pixels. yes, that small
-        if(pixelCount/pixelTotal <= 0.01 or column == 5):
-            if Debug:
-                print("It's Blank")
-            return ""  # Skipping ahead if its already looking like theres nothing
-        else:
-            if Debug:
-                print("we couldnt read it")
-            # if theres enough pixels to describe a possbile image, then it isnt empty, but it cant read it
-            return "RequestCorrection:NaN"
+            print("we couldnt read it")
+        # if theres enough pixels to describe a possbile image, then it isnt empty, but it cant read it
+        return "RequestCorrection:NaN"
 
     # Using contrast for more values
     for i in range(50):
