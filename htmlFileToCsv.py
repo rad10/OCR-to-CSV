@@ -640,14 +640,14 @@ def correctValue(image, column, threshold=0.3):
             additions.append(template)
         outputs.extend(additions)
         outputs.sort()
-        for i in range(len(outputs)-1, 0, -1):  # Remove duplicate entries
-            if(outputs[i] == outputs[i-1]):
-                outputs.pop(i)
+        
+        for string in outputs: # Remove duplicate entries
+            for copies in range(outputs.count(string) - 1):
+                outputs.remove(string)
 
         # Removing blank entries. it wasnt considered blank, so it shouldnt be there
-        for i in range(len(outputs) - 1, -1, -1):
-            if(outputs[i] == ""):
-                outputs.pop(i)
+        for blanks in range(outputs.count("")):
+            outputs.remove("")
 
         logging.debug("Words[outputs]: %s", outputs)
         largest = len(max(set(outputs), key=len))
