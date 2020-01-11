@@ -916,7 +916,7 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
                 root.update_idletasks()
             results[-1].append([])
             for col in range(1, len(row)):  # skip first col which is dummy
-                logging.info("Sheet[%d]: [%d, %d]", sheetInd, rowInd, col)
+                logging.info("Sheet[%s]: [%s, %s]", str(sheetInd), str(rowInd), str(col))
                 temp = correctValue(row[col], col)
                 if(temp == None):  # the correction failed. the user must return the correction
                     temp = "RequestCorrection"
