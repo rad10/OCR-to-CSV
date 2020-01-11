@@ -123,6 +123,9 @@ del installError
 # Functions
 Debug = False
 
+if "debug" in os.sys.argv:
+    Debug = True
+
 if Debug and not os.path.exists("debugOutput/."):
     os.makedirs("debugOutput/dictionary", exist_ok=True)
     os.makedirs("debugOutput/scrapper", exist_ok=True)
