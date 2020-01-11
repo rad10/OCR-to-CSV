@@ -704,45 +704,53 @@ def correctValue(image, column, threshold=0.3):
             "9": ["g", "q"],  # 9
             ":": ["'", ".", ","]
         }
+
+        template = ""
+        correctFormat = []  # the array that will only take in outputs that fit formatting
+
+        logging.debug("outputs[nums]: %s", outputs)
         if column in [2, 3]:
             # Source for regex string http://regexlib.com/DisplayPatterns.aspx?cattabindex=4&categoryId=5&AspxAutoDetectCookieSupport=1
             timeFilter = re.compile(
                 r'^((([0]?[1-9]|1[0-2])(:|\.)[0-5][0-9]((:|\.)[0-5][0-9])?( )?(AM|am|aM|Am|PM|pm|pM|Pm))|(([0]?[0-9]|1[0-9]|2[0-3])(:|\.)[0-5][0-9]((:|\.)[0-5][0-9])?))$')
 
-        template = ""
-        additions = []
-        for word in outputs:
-            if column in [2, 3] and bool(timeFilter.match(word)):
-                continue
-            if column in [2, 3] and word.isdigit():
-                if(len(word) >= 3 and len(word) <= 6):
-                    template = word
-                    for i in range(len(template) - 2, 0, -2):
-                        template = template[:i] + ":" + template[i:]
-                    additions.append(template)
-                    continue
-            template = ""
-            for char in range(len(word)):
-                for i in digitCorrections:
-                    if word[char] in digitCorrections[i]:
-                        template += str(i)
-                        break
-                else:
-                    template += word[char]
-            if column in [2, 3] and template.isdigit():
-                if(len(word) >= 3 and len(word) <= 6):
-                    for i in range(len(template) - 2, 0, -2):
-                        template = template[:i] + ":" + template[i:]
-            additions.append(template)
-        outputs.extend(additions)
-        outputs.sort()
+            # Removing outputs either too big or too small to be plausible time.
+            colonSet = set(digitCorrections[":"])
+            colonSet.add(":")
+            for i in range(len(outputs) - 1, -1, -1):
+                if ((len(outputs[i]) < 3 + bool(set(outputs[i]) & colonSet)) or (len(outputs[i]) > 4 + bool(set(outputs[i]) & colonSet))):
+                    outputs.pop(i)
 
-        correctFormat = []  # the array that will only take in outputs that fit formatting
-        for word in outputs:
-            if column in [2, 3] and bool(timeFilter.match(word)):
-                correctFormat.append(word)
-            elif column == 4 and (word.isdigit() or word.isdecimal()):
-                correctFormat.append(word)
+            logging.debug("time[outputs]: %s", outputs)
+            # Doing translations
+            # by using a while loop, I allow the program to keep checkign until the entire array is gone, assuring no out of place characters
+            while(0 < len(outputs)):
+                # checking if item is already time or digit incase we can skip it
+                # if the string matches a time, sends it straight to correct values
+                if(bool(timeFilter.match(outputs[0]))):
+                    for e in range(outputs.count(outputs[0])):
+                        correctFormat.append(outputs[0])
+                # If its a number, then it will turn the number into a time and put it into resulting check if its a proper time.
+                elif (outputs[0].isdigit() or outputs[0].isdecimal()):
+                    # make template word so that it can be molded into a time.
+                    template = outputs[0]
+                    for e in range(len(template) - 2, 0, -2):
+                        template = template[:e] + ":" + template[e:]
+                    # if the time is legit, then add all repeating similiar strings
+                    if(bool(timeFilter.match(template))):
+                        for e in range(outputs.count(outputs[0])):
+                            correctFormat.append(template)
+                else:
+                    for digit, sets in digitCorrections.items():  # iterate through entire translation dictionary
+                        # iterates only between the characters that can be replaced.
+                        for elem in set(sets).intersection(set(outputs[0])):
+                            for e in range(outputs.count(outputs[0])):
+                                outputs.append(
+                                    outputs[0].replace(elem, digit))
+                # once added additional lines or added legit guesses, removed all of string to avoid checking it again.
+                template = outputs[0]
+                for e in range(outputs.count(outputs[0])):
+                    outputs.remove(template)
 
         if (len(correctFormat) == 0):
             bestGuess = max(set(outputs), key=outputs.count)
