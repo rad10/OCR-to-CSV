@@ -25,7 +25,8 @@ except ModuleNotFoundError:
         os.system("pip install --user pillow")
     from PIL import Image, ImageTk
 except ImportError:
-    import Image, ImageTk
+    import Image
+    import ImageTk
 
 # if tesseract isnt installed, itll install it for you
 try:
@@ -42,7 +43,9 @@ except ImportError:
         os.system("pip install --user pdf2image")
     from pdf2image import convert_from_path
 
-### Checking that external software is installed and ready to use
+# Checking that external software is installed and ready to use
+
+
 def installError(name, URL, filename):
     def download():
         import webbrowser
@@ -109,27 +112,32 @@ def installError(name, URL, filename):
 
     ie.mainloop()
     os.sys.exit(1)
+
+
 # check if tesseract exists
 if os.system("tesseract --help"):
     if os.path.exists("C:\\Program Files\\Tesseract-OCR\\tesseract.exe"):
         tess.pytesseract.tesseract_cmd = r'C:\\Program Files\\Tesseract-OCR\\tesseract'
     else:
-        installError("Tesseract", "https://github.com/UB-Mannheim/tesseract/releases", "tesseract.exe")
+        installError(
+            "Tesseract", "https://github.com/UB-Mannheim/tesseract/releases", "tesseract.exe")
 # check if poppler exists
 if os.system("pdfimages -help"):
-    installError("Poppler", "https://poppler.freedesktop.org/", "pdfimages.exe")
+    installError("Poppler", "https://poppler.freedesktop.org/",
+                 "pdfimages.exe")
 del installError
 
 
 # Functions
 
 
-
 logging.getLogger().setLevel(logging.WARNING)
 if "info" in os.sys.argv:
-    logging.basicConfig(format="%(asctime)s: INFO %(message)s", datefmt="%H:%M:%S", level=logging.INFO)
+    logging.basicConfig(format="%(asctime)s: INFO %(message)s",
+                        datefmt="%H:%M:%S", level=logging.INFO)
 elif "debug" in os.sys.argv:
-    logging.basicConfig(format="%(asctime)s: DEBUG %(message)s", datefmt="%H:%M:%S", level=logging.DEBUG)
+    logging.basicConfig(format="%(asctime)s: DEBUG %(message)s",
+                        datefmt="%H:%M:%S", level=logging.DEBUG)
     if not os.path.exists("debugOutput/."):
         os.makedirs("debugOutput/dictionary", exist_ok=True)
         os.makedirs("debugOutput/scrapper", exist_ok=True)
@@ -142,12 +150,11 @@ JSONFile.close()
 JSONChange = False  # this is only used when the database is updated
 
 
-def debug(label:str, content: list):
+def debug(label: str, content: list):
     logging.debug("%s:", label)
     if(logging.getLogger().level == logging.DEBUG):
         for i in content:
             print(i)
-
 
 
 def debugImageDictionary(diction):
@@ -892,12 +899,13 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
         dformat = re.compile(r'\d{1,2}\/\d{1,2}\/(\d{4}|\d{2})')
         dstr = ""
         for date in sheet[:-1]:
-            dstr = tess.image_to_string(date).replace("\n", "").replace(" ", "")
+            dstr = tess.image_to_string(date).replace(
+                "\n", "").replace(" ", "")
             if (bool(dformat.match(dstr))):
                 dates.insert(0, dstr)
             else:
                 dates.append(dstr)
-            
+
         # | Full name | Time in | Time out | hours (possibly blank) | purpose | date | day (possibly blank) |
         for row in sheet[-1][1:]:  # skips first row which is dummy
             if gui:
