@@ -752,14 +752,29 @@ def correctValue(image, column, threshold=0.3):
                 for e in range(outputs.count(outputs[0])):
                     outputs.remove(template)
 
+        elif(column == 4):
+            while(0 < len(outputs)):
+                if (outputs[0].isdigit() or outputs[0].isdecimal()):
+                    # if the number discovered is less than 12 hours, because no one is expected to be there the entire day.
+                    if (int(outputs[0]) < 12):
+                        for e in range(outputs.count(outputs[0])):
+                            correctFormat.append(outputs[0])
+                else:  # if the string has alpha letters in it: attempt to translate
+                    for digit, sets in digitCorrections.items():
+                        for elem in set(sets).intersection(set(outputs[0])):
+                            for e in range(outputs.count(outputs[0])):
+                                outputs.append(
+                                    outputs[0].replace(elem, digit))
+                template = outputs[0]
+                for e in range(outputs.count(outputs[0])):
+                    outputs.remove(template)
         if (len(correctFormat) == 0):
-            bestGuess = max(set(outputs), key=outputs.count)
+            return "RequestCorrection:NaN"
         else:
             bestGuess = max(set(correctFormat), key=correctFormat.count)
         if (threshold == 0):
             return bestGuess
         if column in [2, 3]:
-            logging.debug("time[outputs]: %s", outputs)
             logging.info("time[bestguess]: %s", bestGuess)
             logging.debug("time[correctFormat]: %s", correctFormat)
             if(bool(timeFilter.match(bestGuess))):
@@ -767,7 +782,6 @@ def correctValue(image, column, threshold=0.3):
             else:
                 return "RequestCorrection:" + str(bestGuess)
         elif(column == 4):
-            logging.debug("hours[outputs]: %s", outputs)
             logging.info("hours[bestguess]: %s", bestGuess)
             if(bestGuess.isdigit() or bestGuess.isdecimal()):
                 # will only return the hours if theyre a valid number
