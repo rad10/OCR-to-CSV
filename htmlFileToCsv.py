@@ -916,7 +916,7 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
                 root.update_idletasks()
             results[-1].append([])
             for col in range(1, len(row)):  # skip first col which is dummy
-                logging.info("Sheet[%s]: [%s, %s]", str(sheetInd), str(rowInd), str(col))
+                logging.info("Sheet[%d]: [%d, %d]", int(sheetInd), int(rowInd), int(col))
                 temp = correctValue(row[col], col)
                 if(temp == None):  # the correction failed. the user must return the correction
                     temp = "RequestCorrection"
@@ -926,8 +926,8 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
             else:
                 results[-1][-1].extend(dates)
         if (logging.getLogger().level == logging.DEBUG):
-            for sheet in range(len(results)):
-                debug("Results Sheet[" + str(sheet) + "]", results[sheet])
+            for e in range(len(results)):
+                debug("Results Sheet[" + str(e) + "]", results[e])
         # Iterating through results to see where errors occured
         for row in range(len(results[-1])):
             for col in range(len(results[-1][row][:-len(dates)])):
