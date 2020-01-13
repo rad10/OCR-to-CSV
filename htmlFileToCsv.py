@@ -152,13 +152,13 @@ JSONChange = False  # this is only used when the database is updated
 
 def debug(label: str, content: list):
     logging.debug("%s:", label)
-    if(logging.getLogger().level == logging.DEBUG):
+    if(logging.getLogger().level <= logging.DEBUG):
         for i in content:
             print(i)
 
 
 def debugImageDictionary(diction):
-    if (logging.getLogger().level == logging.INFO):
+    if (logging.getLogger().level <= logging.INFO):
         debugOutput = "Sheet | SheetLen | TableRow | TableCol\n"
         for sheet in range(len(diction)):
             debugOutput += "{ind: 5d} | {slen: 8d} | {trow: 8d} | {tcol: 8d}\n".format(ind=sheet, slen=len(
@@ -201,7 +201,7 @@ def collectContours(image):
         image, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
     invert = 255 - thresh
 
-    if (logging.getLogger().level == logging.DEBUG):
+    if (logging.getLogger().level <= logging.DEBUG):
         while(os.path.exists("debugOutput/scrapper/{ind}1invert.jpg".format(ind=debugIndex))):
             debugIndex += 1
         cv2.imwrite(
@@ -222,7 +222,7 @@ def collectContours(image):
     verticleLines = cv2.threshold(
         verticleLines, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
 
-    if (logging.getLogger().level == logging.DEBUG):
+    if (logging.getLogger().level <= logging.DEBUG):
         cv2.imwrite(
             "debugOutput/scrapper/{ind}2verticleLines.jpg".format(ind=debugIndex), verticleLines)
 
@@ -232,7 +232,7 @@ def collectContours(image):
     horizontalLines = cv2.threshold(
         horizontalLines, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
 
-    if (logging.getLogger().level == logging.DEBUG):
+    if (logging.getLogger().level <= logging.DEBUG):
         cv2.imwrite(
             "debugOutput/scrapper/{ind}3horizontalLines.jpg".format(ind=debugIndex), horizontalLines)
 
@@ -247,7 +247,7 @@ def collectContours(image):
     blankTable = cv2.threshold(blankTable, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[
         1]  # sharpening new table
 
-    if (logging.getLogger().level == logging.DEBUG):
+    if (logging.getLogger().level <= logging.DEBUG):
         cv2.imwrite(
             "debugOutput/scrapper/{ind}4blankTable.jpg".format(ind=debugIndex), blankTable)
     # Detecting all contours, which gives me all box positions
@@ -330,7 +330,7 @@ def imageScraper(file, outputArray=None):
         table = image[table[1]-5:table[1]+table[3] +
                       5, table[0]-5:table[0]+table[2]+5]
 
-        if (logging.getLogger().level == logging.DEBUG):
+        if (logging.getLogger().level <= logging.DEBUG):
             cv2.imwrite(
                 "debugOutput/scrapper/mainTable{image}.jpg".format(image=debugIndex), table)
             debugIndex += 1
@@ -355,7 +355,7 @@ def imageScraper(file, outputArray=None):
             tVerticleLines, tKernelVerticle, iterations=3)
         tVerticleLines = cv2.threshold(
             tVerticleLines, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
-        if (logging.getLogger().level == logging.DEBUG):
+        if (logging.getLogger().level <= logging.DEBUG):
             cv2.imwrite(
                 "debugOutput/scrapper/table{}VertLines.jpg".format(debugIndex), tVerticleLines)
         # Added this line because it needs a white background rather than black background
@@ -402,7 +402,7 @@ def imageScraper(file, outputArray=None):
         # this is the gap after the table from the right side
         verticlePairs.pop(-1)
 
-        if (logging.getLogger().level == logging.DEBUG):
+        if (logging.getLogger().level <= logging.DEBUG):
             logging.debug("VerticlePairs: %s", verticlePairs)
             debugimg = cv2.cvtColor(tVerticleLines, cv2.COLOR_GRAY2BGR)
             for v in verticlePairs:
@@ -426,7 +426,7 @@ def imageScraper(file, outputArray=None):
             tHorizontalLines, tKernelHorizontal, iterations=3)
         tHorizontalLines = cv2.threshold(
             tHorizontalLines, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
-        if (logging.getLogger().level == logging.DEBUG):
+        if (logging.getLogger().level <= logging.DEBUG):
             cv2.imwrite(
                 "debugOutput/scrapper/table{}HorLines.jpg".format(debugIndex), tHorizontalLines)
         # Added this line because it needs a white background rather than black background
@@ -474,7 +474,7 @@ def imageScraper(file, outputArray=None):
         # this is the gap after the table from the right side
         horizontalPairs.pop(-1)
 
-        if (logging.getLogger().level == logging.DEBUG):
+        if (logging.getLogger().level <= logging.DEBUG):
             logging.debug("HorizontalPairs: %s", horizontalPairs)
             debugimg = cv2.cvtColor(tHorizontalLines, cv2.COLOR_GRAY2BGR)
             for h in horizontalPairs:
@@ -496,7 +496,7 @@ def imageScraper(file, outputArray=None):
             dictionary.append([])
             for col in verticlePairs:
                 dictionary[dictRow].append(table[row[0]:row[1], col[0]:col[1]])
-                if (logging.getLogger().level == logging.DEBUG):
+                if (logging.getLogger().level <= logging.DEBUG):
                     cv2.imwrite("debugOutput/dictionary/raw/table{}{}.jpg".format(dictRow,
                                                                                   col[1]-col[0]), table[row[0]:row[1], col[0]:col[1]])
             dictRow += 1
@@ -925,7 +925,7 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
                 results[-1].pop(-1)
             else:
                 results[-1][-1].extend(dates)
-        if (logging.getLogger().level == logging.DEBUG):
+        if (logging.getLogger().level <= logging.DEBUG):
             for e in range(len(results)):
                 debug("Results Sheet[" + str(e) + "]", results[e])
         # Iterating through results to see where errors occured
