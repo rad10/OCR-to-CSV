@@ -5,6 +5,7 @@ from math import floor
 from time import sleep
 import re
 import json
+import logging
 
 # if opencv isnt installed, it'll install it for you
 from sys import argv
@@ -24,7 +25,8 @@ except ModuleNotFoundError:
         os.system("pip install --user pillow")
     from PIL import Image, ImageTk
 except ImportError:
-    import Image, ImageTk
+    import Image
+    import ImageTk
 
 # if tesseract isnt installed, itll install it for you
 try:
@@ -41,7 +43,9 @@ except ImportError:
         os.system("pip install --user pdf2image")
     from pdf2image import convert_from_path
 
-### Checking that external software is installed and ready to use
+# Checking that external software is installed and ready to use
+
+
 def installError(name, URL, filename):
     def download():
         import webbrowser
@@ -108,26 +112,37 @@ def installError(name, URL, filename):
 
     ie.mainloop()
     os.sys.exit(1)
+
+
 # check if tesseract exists
 if os.system("tesseract --help"):
     if os.path.exists("C:\\Program Files\\Tesseract-OCR\\tesseract.exe"):
         tess.pytesseract.tesseract_cmd = r'C:\\Program Files\\Tesseract-OCR\\tesseract'
     else:
-        installError("Tesseract", "https://github.com/UB-Mannheim/tesseract/releases", "tesseract.exe")
+        installError(
+            "Tesseract", "https://github.com/UB-Mannheim/tesseract/releases", "tesseract.exe")
 # check if poppler exists
 if os.system("pdfimages -help"):
-    installError("Poppler", "https://poppler.freedesktop.org/", "pdfimages.exe")
+    installError("Poppler", "https://poppler.freedesktop.org/",
+                 "pdfimages.exe")
 del installError
 
 
 # Functions
-Debug = False
 
-if Debug and not os.path.exists("debugOutput/."):
-    os.makedirs("debugOutput/dictionary", exist_ok=True)
-    os.makedirs("debugOutput/scrapper", exist_ok=True)
-elif Debug:
-    os.system("del /s debugOutput\\*.jpg")
+
+logging.getLogger().setLevel(logging.WARNING)
+if "info" in os.sys.argv:
+    logging.basicConfig(format="%(asctime)s: INFO %(message)s",
+                        datefmt="%H:%M:%S", level=logging.INFO)
+elif "debug" in os.sys.argv:
+    logging.basicConfig(format="%(asctime)s: DEBUG %(message)s",
+                        datefmt="%H:%M:%S", level=logging.DEBUG)
+    if not os.path.exists("debugOutput/."):
+        os.makedirs("debugOutput/dictionary", exist_ok=True)
+        os.makedirs("debugOutput/scrapper", exist_ok=True)
+    else:
+        os.system("del /s debugOutput\\*.jpg")
 
 JSONFile = open("./aliases.json", "r")
 JSON = json.load(JSONFile)
@@ -135,18 +150,20 @@ JSONFile.close()
 JSONChange = False  # this is only used when the database is updated
 
 
-def debug(content):
-    if Debug:
-        print(content)
+def debug(label: str, content: list):
+    logging.debug("%s:", label)
+    if(logging.getLogger().level <= logging.DEBUG):
+        for i in content:
+            print(i)
 
 
 def debugImageDictionary(diction):
-    if Debug:
+    if (logging.getLogger().level <= logging.INFO):
         debugOutput = "Sheet | SheetLen | TableRow | TableCol\n"
         for sheet in range(len(diction)):
             debugOutput += "{ind: 5d} | {slen: 8d} | {trow: 8d} | {tcol: 8d}\n".format(ind=sheet, slen=len(
                 diction[sheet]), trow=len(diction[sheet][-1]), tcol=len(diction[sheet][-1][0]))
-        print(debugOutput)
+        logging.info(debugOutput)
         exportToFile("debugOutput/dictionaryStats.txt", debugOutput)
         for sheet in range(len(diction)):
             for dates in range(len(diction[sheet][:-1])):
@@ -184,7 +201,7 @@ def collectContours(image):
         image, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
     invert = 255 - thresh
 
-    if Debug:
+    if (logging.getLogger().level <= logging.DEBUG):
         while(os.path.exists("debugOutput/scrapper/{ind}1invert.jpg".format(ind=debugIndex))):
             debugIndex += 1
         cv2.imwrite(
@@ -205,7 +222,7 @@ def collectContours(image):
     verticleLines = cv2.threshold(
         verticleLines, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
 
-    if Debug:
+    if (logging.getLogger().level <= logging.DEBUG):
         cv2.imwrite(
             "debugOutput/scrapper/{ind}2verticleLines.jpg".format(ind=debugIndex), verticleLines)
 
@@ -215,7 +232,7 @@ def collectContours(image):
     horizontalLines = cv2.threshold(
         horizontalLines, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
 
-    if Debug:
+    if (logging.getLogger().level <= logging.DEBUG):
         cv2.imwrite(
             "debugOutput/scrapper/{ind}3horizontalLines.jpg".format(ind=debugIndex), horizontalLines)
 
@@ -230,7 +247,7 @@ def collectContours(image):
     blankTable = cv2.threshold(blankTable, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[
         1]  # sharpening new table
 
-    if Debug:
+    if (logging.getLogger().level <= logging.DEBUG):
         cv2.imwrite(
             "debugOutput/scrapper/{ind}4blankTable.jpg".format(ind=debugIndex), blankTable)
     # Detecting all contours, which gives me all box positions
@@ -313,7 +330,7 @@ def imageScraper(file, outputArray=None):
         table = image[table[1]-5:table[1]+table[3] +
                       5, table[0]-5:table[0]+table[2]+5]
 
-        if Debug:
+        if (logging.getLogger().level <= logging.DEBUG):
             cv2.imwrite(
                 "debugOutput/scrapper/mainTable{image}.jpg".format(image=debugIndex), table)
             debugIndex += 1
@@ -338,7 +355,7 @@ def imageScraper(file, outputArray=None):
             tVerticleLines, tKernelVerticle, iterations=3)
         tVerticleLines = cv2.threshold(
             tVerticleLines, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
-        if Debug:
+        if (logging.getLogger().level <= logging.DEBUG):
             cv2.imwrite(
                 "debugOutput/scrapper/table{}VertLines.jpg".format(debugIndex), tVerticleLines)
         # Added this line because it needs a white background rather than black background
@@ -369,8 +386,7 @@ def imageScraper(file, outputArray=None):
                 verticlePairs.append((x, x + w))
         verticlePairs.sort()
 
-        if Debug:
-            print("Debug VerticlePairs:", verticlePairs)
+        logging.debug("VerticlePairs: %s", verticlePairs)
 
         # Fixing overlapping of some pairs
         for v in range(len(verticlePairs) - 1):
@@ -386,8 +402,8 @@ def imageScraper(file, outputArray=None):
         # this is the gap after the table from the right side
         verticlePairs.pop(-1)
 
-        if Debug:
-            print("Debug VerticlePairs:", verticlePairs)
+        if (logging.getLogger().level <= logging.DEBUG):
+            logging.debug("VerticlePairs: %s", verticlePairs)
             debugimg = cv2.cvtColor(tVerticleLines, cv2.COLOR_GRAY2BGR)
             for v in verticlePairs:
                 cv2.line(debugimg, (v[0], 0),
@@ -410,7 +426,7 @@ def imageScraper(file, outputArray=None):
             tHorizontalLines, tKernelHorizontal, iterations=3)
         tHorizontalLines = cv2.threshold(
             tHorizontalLines, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
-        if Debug:
+        if (logging.getLogger().level <= logging.DEBUG):
             cv2.imwrite(
                 "debugOutput/scrapper/table{}HorLines.jpg".format(debugIndex), tHorizontalLines)
         # Added this line because it needs a white background rather than black background
@@ -442,8 +458,7 @@ def imageScraper(file, outputArray=None):
                 horizontalPairs.append((y, y + h))
         horizontalPairs.sort()
 
-        if Debug:
-            print("Debug HorizontalPairs:", horizontalPairs)
+        logging.debug("HorizontalPairs: %s", horizontalPairs)
 
         # Fixing overlapping of some pairs
         for h in range(len(horizontalPairs) - 1):
@@ -459,8 +474,8 @@ def imageScraper(file, outputArray=None):
         # this is the gap after the table from the right side
         horizontalPairs.pop(-1)
 
-        if Debug:
-            print("Debug HorizontalPairs:", horizontalPairs)
+        if (logging.getLogger().level <= logging.DEBUG):
+            logging.debug("HorizontalPairs: %s", horizontalPairs)
             debugimg = cv2.cvtColor(tHorizontalLines, cv2.COLOR_GRAY2BGR)
             for h in horizontalPairs:
                 cv2.line(debugimg, (0, h[0]),
@@ -481,7 +496,7 @@ def imageScraper(file, outputArray=None):
             dictionary.append([])
             for col in verticlePairs:
                 dictionary[dictRow].append(table[row[0]:row[1], col[0]:col[1]])
-                if Debug:
+                if (logging.getLogger().level <= logging.DEBUG):
                     cv2.imwrite("debugOutput/dictionary/raw/table{}{}.jpg".format(dictRow,
                                                                                   col[1]-col[0]), table[row[0]:row[1], col[0]:col[1]])
             dictRow += 1
@@ -506,17 +521,29 @@ def compareKnownAliases(id, col=1):
     closestMatch = ""
     mostMatches = 0
     matches = 0
-    for alias in JSON["names"][str(col)]:
-        matches = 0
-        for i in range(max(len(id), len(alias))):
-            try:
+    if (col == 1 and id.count(" ") == 1):
+        for alias in JSON["names"]["1"]:
+            matches = 0
+            for i in range(min(alias.find(" "), id.find(" "))):
                 if(id[i] == alias[i]):
                     matches += 1
-            except IndexError:
-                break
-        if (matches > mostMatches):
-            closestMatch = alias
-            mostMatches = matches
+            lalias = alias.find(" ") + 1
+            lid = id.find(" ") + 1
+            for i in range(min(len(alias) - lalias, len(id) - lid)):
+                if(id[lid + i] == alias[lalias + i]):
+                    matches += 1
+            if (matches > mostMatches):
+                closestMatch = alias
+                mostMatches = matches
+    else:
+        for alias in JSON["names"][str(col)]:
+            matches = 0
+            for i in range(min(len(id), len(alias))):
+                if(id[i] == alias[i]):
+                    matches += 1
+            if (matches > mostMatches):
+                closestMatch = alias
+                mostMatches = matches
     return closestMatch, mostMatches
 
 
@@ -531,6 +558,24 @@ def correctValue(image, column, threshold=0.3):
     The last step is for it take all the new unique strings and run them through another function to see which names the strings closest resemble. The name with the most conclusions is considered the best guess.\n
     However, the best guess may not be accepted if the name doesnt share enough characters in common with all the guesses, then its scrapped and nothing is returned.
     """
+
+    # Running initial checks to see if cell is empty
+    # were creating an inverted thresh of the image for counting pixels, removes 8px border in case it includes external lines or table borders
+    invert = cv2.cvtColor(image[8: -8, 8: -8], cv2.COLOR_BGR2GRAY)
+    invert = cv2.threshold(
+        invert, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
+    invert = 255 - invert
+    # countnonzero only counts white pixels, so i need to invert to turn black pixels white
+    pixelCount = cv2.countNonZero(invert)
+    pixelTotal = invert.shape[0] * invert.shape[1]
+
+    logging.debug("blankPercent: %s", pixelCount/pixelTotal)
+    # will only consider empty if image used less than 1% of pixels. yes, that small
+    if(pixelCount/pixelTotal <= 0.01):
+        logging.info("It's Blank")
+        return ""  # Skipping ahead if its already looking like theres nothing
+    del invert, pixelCount, pixelTotal
+
     outputs = []
     # Get normal results
     outputs.append(tess.image_to_string(image))
@@ -544,27 +589,11 @@ def correctValue(image, column, threshold=0.3):
         temp, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
     outputs.append(tess.image_to_string(temp))
 
-    if(outputs.count("") >= 2):  # quick check incase box is looking empty; will only skip if 2/3 or more are blank
-        if Debug:
-            print("Looks empty")
-        # inverts the threshed image, removes 8px border in case it includes external lines or table borders
-        invert = 255 - temp[8:-8, 8:-8]
-        # countnonzero only counts white pixels, so i need to invert to turn black pixels white
-        pixelCount = cv2.countNonZero(invert)
-        pixelTotal = temp.shape[0] * temp.shape[1]
-
-        if Debug:
-            print("debug blankPercent:", pixelCount/pixelTotal)
-        # will only consider empty if image used less than 1% of pixels. yes, that small
-        if(pixelCount/pixelTotal <= 0.01 or column == 5):
-            if Debug:
-                print("It's Blank")
-            return ""  # Skipping ahead if its already looking like theres nothing
-        else:
-            if Debug:
-                print("we couldnt read it")
-            # if theres enough pixels to describe a possbile image, then it isnt empty, but it cant read it
-            return "RequestCorrection:NaN"
+    # quick check incase box is looking empty; will only skip if 2/3 or more are blank
+    if(outputs.count("") >= len(outputs)*0.5):
+        logging.info("we couldnt read it")
+        # if theres enough pixels to describe a possbile image, then it isnt empty, but it cant read it
+        return "RequestCorrection:NaN"
 
     # Using contrast for more values
     for i in range(50):
@@ -618,17 +647,16 @@ def correctValue(image, column, threshold=0.3):
             additions.append(template)
         outputs.extend(additions)
         outputs.sort()
-        for i in range(len(outputs)-1, 0, -1):  # Remove duplicate entries
-            if(outputs[i] == outputs[i-1]):
-                outputs.pop(i)
+        
+        for string in outputs: # Remove duplicate entries
+            for copies in range(outputs.count(string) - 1):
+                outputs.remove(string)
 
         # Removing blank entries. it wasnt considered blank, so it shouldnt be there
-        for i in range(len(outputs) - 1, -1, -1):
-            if(outputs[i] == ""):
-                outputs.pop(i)
+        for blanks in range(outputs.count("")):
+            outputs.remove("")
 
-        if Debug:
-            print("Debug Words[outputs]:", outputs)
+        logging.debug("Words[outputs]: %s", outputs)
         largest = len(max(set(outputs), key=len))
         bestGuess = ""  # variable that determines result
         closestMatch = 0  # the number of times best guess occurs in our guesses
@@ -640,8 +668,7 @@ def correctValue(image, column, threshold=0.3):
             guesses.append(compareKnownAliases(i, column))
         guesses.sort()
         guesses.append(("", 0))  # full stop to make searcher read last item
-        if Debug:
-            print("Debug Words[Guesses]:", guesses)
+        logging.debug("Words[Guesses]: %s", guesses)
         check = guesses[0][0]
 
         for i in guesses:
@@ -657,9 +684,8 @@ def correctValue(image, column, threshold=0.3):
             score = max(score, i[1])
             count += 1
 
-        if Debug:
-            print("Debug Words[accuracy]:", accuracy)
-            print("Debug Words[bestGuess]:", bestGuess)
+        logging.debug("Words[accuracy]: %s", accuracy)
+        logging.info("Words[bestGuess]: %s", bestGuess)
         if (bestGuess == ""):
             # if we did our job correctly, the name/purpose should never be blank
             return "RequestCorrection:NaN"
@@ -673,77 +699,97 @@ def correctValue(image, column, threshold=0.3):
         ## Corrections to Dates and Hours ##
         ####################################
         digitCorrections = {
-            0: ["o", "O", "Q", "C", "c"],  # 0
-            1: ["I", "l", "/", "\\", "|", "[", "]", "(", ")"],  # 1
-            2: ["z", "Z"],  # 2
-            3: ["3", "E"],  # 3
-            4: ["h", "y", "A"],  # 4
-            5: ["s", "S"],  # 5
-            6: ["b", "e"],  # 6
-            7: ["t", ")", "}"],  # 7
-            8: ["B", "&"],  # 8
-            9: ["g", "q"],  # 9
+            "0": ["o", "O", "Q", "C", "c"],  # 0
+            "1": ["I", "l", "/", "\\", "|", "[", "]", "(", ")", "j"],  # 1
+            "2": ["z", "Z"],  # 2
+            "3": ["E"],  # 3
+            "4": ["h", "H", "y", "A"],  # 4
+            "5": ["s", "S"],  # 5
+            "6": ["b", "e"],  # 6
+            "7": ["t", ")", "}"],  # 7
+            "8": ["B", "&"],  # 8
+            "9": ["g", "q"],  # 9
             ":": ["'", ".", ","]
         }
+
+        template = ""
+        correctFormat = []  # the array that will only take in outputs that fit formatting
+
+        logging.debug("outputs[nums]: %s", outputs)
         if column in [2, 3]:
             # Source for regex string http://regexlib.com/DisplayPatterns.aspx?cattabindex=4&categoryId=5&AspxAutoDetectCookieSupport=1
             timeFilter = re.compile(
                 r'^((([0]?[1-9]|1[0-2])(:|\.)[0-5][0-9]((:|\.)[0-5][0-9])?( )?(AM|am|aM|Am|PM|pm|pM|Pm))|(([0]?[0-9]|1[0-9]|2[0-3])(:|\.)[0-5][0-9]((:|\.)[0-5][0-9])?))$')
 
-        template = ""
-        additions = []
-        for word in outputs:
-            if column in [2, 3] and bool(timeFilter.match(word)):
-                continue
-            if column in [2, 3] and word.isdigit():
-                if(len(word) >= 3 and len(word) <= 6):
-                    template = word
-                    for i in range(len(template) - 2, 0, -2):
-                        template = template[:i] + ":" + template[i:]
-                    additions.append(template)
-                    continue
-            template = ""
-            for char in range(len(word)):
-                for i in digitCorrections:
-                    if word[char] in digitCorrections[i]:
-                        template += str(i)
-                        break
+            # Removing outputs either too big or too small to be plausible time.
+            colonSet = set(digitCorrections[":"])
+            colonSet.add(":")
+            for i in range(len(outputs) - 1, -1, -1):
+                if ((len(outputs[i]) < 3 + bool(set(outputs[i]) & colonSet)) or (len(outputs[i]) > 4 + bool(set(outputs[i]) & colonSet))):
+                    outputs.pop(i)
+
+            logging.debug("time[outputs]: %s", outputs)
+            # Doing translations
+            # by using a while loop, I allow the program to keep checkign until the entire array is gone, assuring no out of place characters
+            while(0 < len(outputs)):
+                # checking if item is already time or digit incase we can skip it
+                # if the string matches a time, sends it straight to correct values
+                if(bool(timeFilter.match(outputs[0]))):
+                    for e in range(outputs.count(outputs[0])):
+                        correctFormat.append(outputs[0])
+                # If its a number, then it will turn the number into a time and put it into resulting check if its a proper time.
+                elif (outputs[0].isdigit() or outputs[0].isdecimal()):
+                    # make template word so that it can be molded into a time.
+                    template = outputs[0]
+                    for e in range(len(template) - 2, 0, -2):
+                        template = template[:e] + ":" + template[e:]
+                    # if the time is legit, then add all repeating similiar strings
+                    if(bool(timeFilter.match(template))):
+                        for e in range(outputs.count(outputs[0])):
+                            correctFormat.append(template)
                 else:
-                    template += word[char]
-            if column in [2, 3] and template.isdigit():
-                if(len(word) >= 3 and len(word) <= 6):
-                    for i in range(len(template) - 2, 0, -2):
-                        template = template[:i] + ":" + template[i:]
-            additions.append(template)
-        outputs.extend(additions)
-        outputs.sort()
+                    for digit, sets in digitCorrections.items():  # iterate through entire translation dictionary
+                        # iterates only between the characters that can be replaced.
+                        for elem in set(sets).intersection(set(outputs[0])):
+                            for e in range(outputs.count(outputs[0])):
+                                outputs.append(
+                                    outputs[0].replace(elem, digit))
+                # once added additional lines or added legit guesses, removed all of string to avoid checking it again.
+                template = outputs[0]
+                for e in range(outputs.count(outputs[0])):
+                    outputs.remove(template)
 
-        correctFormat = []  # the array that will only take in outputs that fit formatting
-        for word in outputs:
-            if column in [2, 3] and bool(timeFilter.match(word)):
-                correctFormat.append(word)
-            elif column == 4 and (word.isdigit() or word.isdecimal()):
-                correctFormat.append(word)
-
+        elif(column == 4):
+            while(0 < len(outputs)):
+                if (outputs[0].isdigit() or outputs[0].isdecimal()):
+                    # if the number discovered is less than 12 hours, because no one is expected to be there the entire day.
+                    if (int(outputs[0]) < 12):
+                        for e in range(outputs.count(outputs[0])):
+                            correctFormat.append(outputs[0])
+                else:  # if the string has alpha letters in it: attempt to translate
+                    for digit, sets in digitCorrections.items():
+                        for elem in set(sets).intersection(set(outputs[0])):
+                            for e in range(outputs.count(outputs[0])):
+                                outputs.append(
+                                    outputs[0].replace(elem, digit))
+                template = outputs[0]
+                for e in range(outputs.count(outputs[0])):
+                    outputs.remove(template)
         if (len(correctFormat) == 0):
-            bestGuess = max(set(outputs), key=outputs.count)
+            return "RequestCorrection:NaN"
         else:
             bestGuess = max(set(correctFormat), key=correctFormat.count)
         if (threshold == 0):
             return bestGuess
         if column in [2, 3]:
-            if Debug:
-                print("debug time[outputs]:", outputs)
-                print("debug time[bestguess]:", bestGuess)
-                print("debug time[correctFormat]:", correctFormat)
+            logging.info("time[bestguess]: %s", bestGuess)
+            logging.debug("time[correctFormat]: %s", correctFormat)
             if(bool(timeFilter.match(bestGuess))):
                 return bestGuess
             else:
                 return "RequestCorrection:" + str(bestGuess)
         elif(column == 4):
-            if Debug:
-                print("debug hours[outputs]:", outputs)
-                print("debug hours[bestguess]:", bestGuess)
+            logging.info("hours[bestguess]: %s", bestGuess)
             if(bestGuess.isdigit() or bestGuess.isdecimal()):
                 # will only return the hours if theyre a valid number
                 return bestGuess
@@ -850,8 +896,16 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
 
         # Collecting dates on page first
         dates = []
+        dformat = re.compile(r'\d{1,2}\/\d{1,2}\/(\d{4}|\d{2})')
+        dstr = ""
         for date in sheet[:-1]:
-            dates.append(tess.image_to_string(date))
+            dstr = tess.image_to_string(date).replace(
+                "\n", "").replace(" ", "")
+            if (bool(dformat.match(dstr))):
+                dates.insert(0, dstr)
+            else:
+                dates.append(dstr)
+
         # | Full name | Time in | Time out | hours (possibly blank) | purpose | date | day (possibly blank) |
         for row in sheet[-1][1:]:  # skips first row which is dummy
             if gui:
@@ -862,14 +916,18 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
                 root.update_idletasks()
             results[-1].append([])
             for col in range(1, len(row)):  # skip first col which is dummy
+                logging.info("Sheet[%d]: [%d, %d]", int(sheetInd), int(rowInd), int(col))
                 temp = correctValue(row[col], col)
                 if(temp == None):  # the correction failed. the user must return the correction
                     temp = "RequestCorrection"
                 results[-1][-1].append(temp)
-            results[-1][-1].extend(dates)
-
-        if Debug:
-            print("Debug Results:", results)
+            if(results[-1][-1].count("") == len(results[-1][-1])):
+                results[-1].pop(-1)
+            else:
+                results[-1][-1].extend(dates)
+        if (logging.getLogger().level <= logging.DEBUG):
+            for e in range(len(results)):
+                debug("Results Sheet[" + str(e) + "]", results[e])
         # Iterating through results to see where errors occured
         for row in range(len(results[-1])):
             for col in range(len(results[-1][row][:-len(dates)])):
@@ -902,7 +960,7 @@ def arrayToCsv(directory):
         for e in range(len(directory[i])-1):
             cvarray += (directory[i][e]+",")
         cvarray += (directory[i][-1]+"\n")
-        debug(("cvarray["+str(i)+"]:", cvarray))
+    logging.debug("cvarray:\n%s", cvarray)
     return (cvarray+"\n")
 
 
