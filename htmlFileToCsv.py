@@ -322,6 +322,16 @@ def imageScraper(file, outputArray=None):
         for x, y, w, h in mainBoxes:
             sheets[-1].append(image[y:y+h, x:x+w])
 
+        # Checking if dates are text and not random images
+        for i in range(len(sheets[-1]) - 1, -1, -1):
+            date = sheets[-1][i]
+            tempDate = cv2.cvtColor(date, cv2.COLOR_BGR2GRAY)
+            tempDate = cv2.threshold(tempDate, 230, 255, cv2.THRESH_BINARY_INV)[1]
+            blackPixel = cv2.countNonZero(tempDate)
+            totalPixel = tempDate.shape[0] * tempDate.shape[1]
+            if(blackPixel/totalPixel <= 0.01 or blackPixel/totalPixel >= 0.20): # if the space filled is not between 1%-20%, then its a dud
+                sheets[-1].pop(i)
+
         #########################################
         # Phase 2: Collecting pairs for mapping #
         #########################################
