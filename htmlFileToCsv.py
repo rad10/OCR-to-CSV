@@ -356,6 +356,7 @@ def imageScraper(file, outputArray=None):
         #############################
         # Collecting Verticle Pairs #
         #############################
+        verticlePoints = []
         verticlePairs = []
         # Creating verticle kernel lines
         tKernelVerticle = cv2.getStructuringElement(
@@ -368,13 +369,6 @@ def imageScraper(file, outputArray=None):
         if (logging.getLogger().level <= logging.DEBUG):
             cv2.imwrite(
                 "debugOutput/scrapper/table{}VertLines.jpg".format(debugIndex), tVerticleLines)
-        # Added this line because it needs a white background rather than black background
-        tVerticleLines = 255 - tVerticleLines
-        # Adding edge lines for contour collection
-        cv2.line(tVerticleLines, (0, floor(tVerticleLines.shape[0] * 0.01)), (
-            tVerticleLines.shape[1], floor(tVerticleLines.shape[0] * 0.01)), (0, 0, 0), 5)
-        cv2.line(tVerticleLines, (0, floor(tVerticleLines.shape[0] * 0.99)), (
-            tVerticleLines.shape[1], floor(tVerticleLines.shape[0] * 0.99)), (0, 0, 0), 5)
         # Collecting verticle contours
         contours = cv2.findContours(
             tVerticleLines, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0]
@@ -383,34 +377,20 @@ def imageScraper(file, outputArray=None):
         tableHeightPair = ()  # empty tuple for checking later
         for c in contours:
             x, y, w, h = cv2.boundingRect(c)
-            # if the height of the contour is at least 90% as long as the whole table, its safe to assume that that belongs to the whole table
-            if(h >= table.shape[0] * 0.9):
-                tableHeightPair = (y, h)
-                break
-            elif(h > maxLength):  # if the height isnt a significant size, then the best choice is the longest length
-                maxlength = h
-                tableHeightPair = (y, h)
-        for c in contours:
-            x, y, w, h = cv2.boundingRect(c)
-            if((y, h) == tableHeightPair):
-                verticlePairs.append((x, x + w))
-        verticlePairs.sort()
-
-        logging.debug("VerticlePairs: %s", verticlePairs)
-
-        # Fixing overlapping of some pairs
-        for v in range(len(verticlePairs) - 1):
-            # if the tail end of a pair overlaps the beginning of the next pair, then swap positions. itll make it slightly smaller, but it will miss table walls
-            if(verticlePairs[v][1] > verticlePairs[v + 1][0]):
-                temp = verticlePairs[v][1]
-                verticlePairs[v] = (verticlePairs[v][0],
-                                    verticlePairs[v + 1][0])
-                verticlePairs[v + 1] = (temp, verticlePairs[v + 1][1])
+            if(h >= table.shape[0] * 0.9): # (y, h) == tableHeightPair):
+                verticlePoints.append(x)
+                verticlePoints.append(x + w)
+        verticlePoints.sort()
 
         # this is the gap before the table from the left side
-        verticlePairs.pop(0)
+        verticlePoints.pop(0)
         # this is the gap after the table from the right side
-        verticlePairs.pop(-1)
+        verticlePoints.pop(-1)
+
+        # taking points and making pairs
+        for i in range(0, len(verticlePoints),2):
+            verticlePairs.append((verticlePoints[i], verticlePoints[i + 1]))
+        logging.debug("VerticlePairs: %s", verticlePairs)
 
         if (logging.getLogger().level <= logging.DEBUG):
             logging.debug("VerticlePairs: %s", verticlePairs)
@@ -427,6 +407,7 @@ def imageScraper(file, outputArray=None):
         # Collecting Horizontal Pairs #
         ###############################
         horizontalPairs = []
+        horizontalPoints = []
         # Creating horizontal kernel lines
         tKernelHorizontal = cv2.getStructuringElement(
             cv2.MORPH_RECT, (tKernelLength, 1))
@@ -439,13 +420,6 @@ def imageScraper(file, outputArray=None):
         if (logging.getLogger().level <= logging.DEBUG):
             cv2.imwrite(
                 "debugOutput/scrapper/table{}HorLines.jpg".format(debugIndex), tHorizontalLines)
-        # Added this line because it needs a white background rather than black background
-        tHorizontalLines = 255 - tHorizontalLines
-        # Adding edge lines for contour collection
-        cv2.line(tHorizontalLines, (floor(tHorizontalLines.shape[1] * 0.01), 0), (floor(
-            tHorizontalLines.shape[1] * 0.01), tHorizontalLines.shape[0]), (0, 0, 0), 5)
-        cv2.line(tHorizontalLines, (floor(tHorizontalLines.shape[1] * 0.99), 0), (floor(
-            tHorizontalLines.shape[1] * 0.99), tHorizontalLines.shape[0]), (0, 0, 0), 5)
         # Collecting Horizontal contours
         contours = cv2.findContours(
             tHorizontalLines, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0]
@@ -455,34 +429,22 @@ def imageScraper(file, outputArray=None):
         tableWidthPair = ()  # empty tuple for checking later
         for c in contours:
             x, y, w, h = cv2.boundingRect(c)
-            # if the width of the contour is at least 90% as long as the whole table, its safe to assume that that belongs to the whole table
-            if(w >= tHorizontalLines.shape[1] * 0.9):
-                tableWidthPair = (x, w)
-                break
-            elif(w > maxLength):  # if the width isnt a significant size, then the best choice is the longest length
-                maxLength = w
-                tableWidthPair = (x, w)
-        for c in contours:
-            x, y, w, h = cv2.boundingRect(c)
-            if((x, w) == tableWidthPair):
-                horizontalPairs.append((y, y + h))
-        horizontalPairs.sort()
+            if(w >= tHorizontalLines.shape[1] * 0.9): # (x, w) == tableWidthPair or w >= tHorizontalLines.shape[1] * 0.9):
+                horizontalPoints.append(y)
+                horizontalPoints.append(y + h)
+        horizontalPoints.sort()
+        logging.debug("HorizontalPoints: %s", horizontalPoints)
 
+        # this is the gap before the table from the top
+        horizontalPoints.pop(0)
+        # this is the gap after the table from the bottom
+        horizontalPoints.pop(-1)
+
+        # Building pairs from points
+        for i in range(0, len(horizontalPoints), 2):
+            horizontalPairs.append((horizontalPoints[i], horizontalPoints[i + 1]))
         logging.debug("HorizontalPairs: %s", horizontalPairs)
 
-        # Fixing overlapping of some pairs
-        for h in range(len(horizontalPairs) - 1):
-            # if the tail end of a pair overlaps the beginning of the next pair, then swap positions. itll make it slightly smaller, but it will miss table walls
-            if(horizontalPairs[h][1] > horizontalPairs[h + 1][0]):
-                temp = horizontalPairs[h][1]
-                horizontalPairs[h] = (
-                    horizontalPairs[h][0], horizontalPairs[h + 1][0])
-                horizontalPairs[h + 1] = (temp, horizontalPairs[h + 1][1])
-
-        # this is the gap before the table from the left side
-        horizontalPairs.pop(0)
-        # this is the gap after the table from the right side
-        horizontalPairs.pop(-1)
 
         if (logging.getLogger().level <= logging.DEBUG):
             logging.debug("HorizontalPairs: %s", horizontalPairs)
