@@ -393,7 +393,6 @@ def imageScraper(file, outputArray=None):
         logging.debug("VerticlePairs: %s", verticlePairs)
 
         if (logging.getLogger().level <= logging.DEBUG):
-            logging.debug("VerticlePairs: %s", verticlePairs)
             debugimg = cv2.cvtColor(tVerticleLines, cv2.COLOR_GRAY2BGR)
             for v in verticlePairs:
                 cv2.line(debugimg, (v[0], 0),
@@ -447,7 +446,6 @@ def imageScraper(file, outputArray=None):
 
 
         if (logging.getLogger().level <= logging.DEBUG):
-            logging.debug("HorizontalPairs: %s", horizontalPairs)
             debugimg = cv2.cvtColor(tHorizontalLines, cv2.COLOR_GRAY2BGR)
             for h in horizontalPairs:
                 cv2.line(debugimg, (0, h[0]),
