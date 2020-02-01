@@ -49,7 +49,7 @@ except ImportError:
 def installError(name, URL, filename):
     def download():
         import webbrowser
-        webbrowser.open(URL, autoraise=True)
+        webbrowser.open_new_tab(URL)
 
     def navigate():
         path = filedialog.askopenfilename(
@@ -120,10 +120,10 @@ if os.system("tesseract --help"):
         tess.pytesseract.tesseract_cmd = r'C:\\Program Files\\Tesseract-OCR\\tesseract'
     else:
         installError(
-            "Tesseract", "https://github.com/UB-Mannheim/tesseract/releases", "tesseract.exe")
+            "Tesseract", "https://github.com/UB-Mannheim/tesseract/wiki", "tesseract.exe")
 # check if poppler exists
 if os.system("pdfimages -help"):
-    installError("Poppler", "https://poppler.freedesktop.org/",
+    installError("Poppler", "https://blog.alivate.com.au/poppler-windows/",
                  "pdfimages.exe")
 del installError
 
