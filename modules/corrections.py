@@ -6,6 +6,15 @@ import pytesseract as tess
 JSON = {}
 
 
+def connectDict(mainJSON: dict):
+    for key, val in mainJSON.items():
+        JSON[key] = val
+    try:  # if I connect the dictionary by a variable, I can connect it by reference
+        globals()["mainJSON"] = JSON
+    except:  # prevents crashes when the value comes from a function return
+        pass
+
+
 def compareKnownAliases(id, col=1):
     """Uses a dictionary of known valid aliases to find the most accurate guess for a name.\n
     @param id: The string that you want a guess as what name it closest resembles.\n

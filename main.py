@@ -147,6 +147,7 @@ elif "debug" in os.sys.argv:
         os.system("del /s debugOutput\\*.jpg")
 
 JSONFile = open("./aliases.json", "r")
+connectDict(json.load(JSONFile))
 JSONFile.close()
 JSONChange = False  # this is only used when the database is updated
 
