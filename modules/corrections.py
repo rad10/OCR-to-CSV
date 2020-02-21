@@ -80,6 +80,23 @@ def parseHocr(html):
             for cprob in chars[char]:  # getting elements themselves for dict
                 results[word][char][cprob.text] = max(
                     float(cprob.attrib["title"][8:]), 1) / 100
+
+        # Checking on letter headers
+        charHeader = [a for a in words[word] if not "id" in a.attrib]
+        if (len(charHeader) == len(chars)):
+            for char in range(len(charHeader)):
+                if charHeader[char].text in results[word][char]:
+                    if float(charHeader[char].attrib["title"][charHeader[
+                            char].attrib["title"].find("x_conf") + 7:])/100 > results[
+                                word][char][charHeader[char].text]:
+                        results[word][char][charHeader[char].text] = float(
+                            charHeader[char].attrib["title"][charHeader[char].attrib[
+                                "title"].find("x_conf") + 7:])/100
+                else:
+                    results[word][char][charHeader[char].text] = max(float(
+                        charHeader[char].attrib["title"][charHeader[char].attrib[
+                            "title"].find("x_conf") + 7:]), 1)/100
+
     return results
 
 
