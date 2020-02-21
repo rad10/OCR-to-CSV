@@ -65,16 +65,17 @@ def parseHocr(html):
 
     # Allocating space for all words
     words = [a for a in base if "id" in a.attrib and "word_" in a.attrib["id"]]
-    results = [[]] * len(words)
+    results = [None] * len(words)
 
     # Populating space of words
     for word in range(len(words)):
         chars = [a for a in words[word]
                  if "id" in a.attrib and "lstm_choices_" in a.attrib["id"]]
-        results[word] = [{}] * len(chars)
+        results[word] = [None] * len(chars)
 
         # Populating char dicts in each space
         for char in range(len(chars)):
+            results[word][char] = {}
             # placing words into each char
             for cprob in chars[char]:  # getting elements themselves for dict
                 results[word][char][cprob.text] = max(
