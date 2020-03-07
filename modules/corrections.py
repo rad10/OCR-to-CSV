@@ -263,8 +263,10 @@ def matchTime(outputs: list, threshold=0.0):
     time = ""
     timeAlt = ""
     probability = 0
+    probabilityAddition = 0
     bestTime = "Nan"
     bestProb = 0
+    bestAltProb = 0
 
     # Adding alternatives
     for i in range(2, -1, -1):
@@ -302,6 +304,7 @@ def matchTime(outputs: list, threshold=0.0):
             # building the time string
             time = ""
             probability = 0
+            probabilityAddition = 0
             # print(timed)
             for cnum in range(len(timed)):
                 time += timed[cnum]
@@ -344,22 +347,30 @@ def matchTime(outputs: list, threshold=0.0):
                             break
 
                     # Double assurance for non values
-                    probAdd = max(probAdd, 0)
-                    probAddAlt = max(probAddAlt, 0)
+                    if ":" in time or probAdd > probAddAlt:
+                        probabilityAddition += probAdd
+                    else:
+                        probabilityAddition += probAddAlt
+                    # probAdd = max(probAdd, 0)
+                    # probAddAlt = max(probAddAlt, 0)
 
-                    probability += probAdd + probAddAlt
-                    logging.info("Time Probability: %s, %s, %lf",
-                                 time, timeAlt, probability)
+                    # probabilityAddition += probAdd + probAddAlt
+                logging.info("Time Probability: %s, %s, %lf, %lf, %lf",
+                             time, timeAlt, probability, probabilityAddition, probability + probabilityAddition)
 
                 # Deciding best decision
-                if probability > bestProb:
+                if (probability + probabilityAddition >= bestProb + bestAltProb and probability > bestProb):
                     if ":" in time:
                         bestTime = time
                     else:
                         bestTime = timeAlt
                     bestProb = probability
+                    bestAltProb = probabilityAddition
 
-    return (bestTime, bestProb, False)
+        # To decide if time probability is past its threshold
+        if (bestAltProb + bestProb > bestProb * len(outputs) * threshold):
+            return (bestTime, bestProb + bestAltProb, True)
+    return (bestTime, bestProb + bestAltProb, False)
 
 
 def matchHour(image, threshold=0.3):
