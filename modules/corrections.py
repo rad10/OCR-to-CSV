@@ -3,6 +3,7 @@ import logging
 import cv2
 import pytesseract as tess
 import xml.etree.ElementTree as ET
+from itertools import product
 
 tess.pytesseract.tesseract_cmd = r'C:\\Program Files\\Tesseract-OCR\\tesseract'
 JSON = {}
@@ -50,7 +51,7 @@ corrections = {
 }
 
 timeFilter = re.compile(
-    r'^((([0]?[1-9]|1[0-2])(:|\.)[0-5][0-9]((:|\.)[0-5][0-9])?( )?(AM|am|aM|Am|PM|pm|pM|Pm))|(([0]?[0-9]|1[0-9]|2[0-3])(:|\.)[0-5][0-9]((:|\.)[0-5][0-9])?))$')
+    r'^(1[0-2]|[1-9]):?([0-5][0-9])$')
 
 
 def parseHocr(html):
@@ -255,45 +256,17 @@ def matchName(outputs: list, threshold=0.0):
     return (bestName, bestProb, False)
 
 
-def mult(iterater, start=0):
-    """Multiplies all values in iterable, starting at start and returns the value
-    """
-    multiply = 1
-    for i in range(len(iterater), start):
-        multiply *= iterater[i]
-    return multiply
-
-
-def getCombo(iterator: list, start: int = 0, end: int = -1):
-    results = []
-    if(end == -1):
-        end = len(iterator)
-
-    if(start == end - 1):
-        return list(iterator[start].keys())
-
-    if(start == 0):
-        for i in iterator[start].keys():
-            for j in getCombo(iterator, start + 1, end):
-                if bool(timeFilter.matches(str(i + j))) or str(i + j).isdigit() or str(i + j).isdecimal():
-                    results.append(str(i + j))
-        return results
-
-    for i in iterator[start].keys():
-        for j in getCombo(iterator, start + 1, end):
-            results.append(str(i + j))
-    return results
-
-
 def matchTime(outputs: list, threshold=0.0):
     ###
     ## Enriching Data ##
     ###
     time = ""
+    timeAlt = ""
     probability = 0
     bestTime = "Nan"
     bestProb = 0
 
+    # Adding alternatives
     for i in range(2, -1, -1):
         outputs[i] = addMissing(outputs[i], "d")  # adds alternate digits
 
@@ -319,46 +292,73 @@ def matchTime(outputs: list, threshold=0.0):
                 if not char.isdigit() and char != ":":
                     # if the key isnt a number or a colon, then remove it
                     del outputs[i][0][slot][char]
-        ###
-        # Calculating Probability
-        ###
-        probSize = 1
-        charlen = [None]*len(outputs[i][0])  # lengths of each individual char
-        time = [""] * len(outputs[i][0])  # make string size of array
-        for char in range(len(outputs[i])):
-            probSize *= len(outputs[i][0][char])
-            charlen[char] = len(outputs[i][0][char])
 
-        # Now for the ultimate factorial calculation
-        for j in range(probSize):
+        ###########################
+        # Calculating Probability #
+        ###########################
+
+        # Permutating through all combos in the list
+        for timed in product(*outputs[i][0]):
+            # building the time string
+            time = ""
             probability = 0
+            # print(timed)
+            for cnum in range(len(timed)):
+                time += timed[cnum]
+                probability += outputs[i][0][cnum][timed[cnum]]
 
-            # Precaution incase math isnt correct
-            if(j // mult(charlen, 1) >= charlen[0]):
-                break
+            logging.debug("Time: %s - %lf", time, probability)
+            if bool(timeFilter.match(time)):
+                # BOOSTING PROBABILITY FROM OTHER OUTPUTS
 
-            # Cycles through position of characters
-            for pos in range(len(charlen)):
+                probAdd = 0  # additional probability to add based on other two outputs
+                probAddAlt = 0  # addition probability if alternate is better
 
-                symb = list(outputs[i][0][pos].keys())[(
-                    j // mult(charlen, pos + 1)) % charlen[pos]]
-                time[pos] = symb
-                probability += outputs[i][0][pos][symb]
+                # Creating alternate with/out colon
+                if not ":" in time:
+                    timeAlt = time[:-2] + ":" + time[-2:]
+                else:
+                    timeAlt = time.replace(":", "")
 
-            # check if its a valid time
-            if(bool(timeFilter.match(time))):
-                pass
-            elif (time.isdigit() or time.isdecimal()):
-                # Add colon to decimal number
-                time = time[:-2] + ":" + time[-2:]
-                probability += 0.5
-            if (probability > bestProb):
-                bestTime = time
-                bestProb = probability
-            print(time, probability)
-    print(bestTime, bestProb)
-    if (bestProb / len(bestTime) >= threshold):
-        return (bestTime, bestProb, True)
+                logging.info("Probability: %lf", probability)
+                logging.info("Time: %s", time)
+                logging.info("Time Alternate: %s", timeAlt)
+
+                for j in range(len(outputs)):
+                    if j == i:  # preventing iterating through itself
+                        continue
+
+                    for slot in range(min(len(time), len(outputs[j][0]))):
+                        # if the char in the outputs dict, itll add its value
+                        # itll only add values if it could fit it
+                        if time[slot] in outputs[j][0][slot].keys():
+                            probAdd += outputs[j][0][slot][time[slot]]
+                        else:
+                            probAdd = 0  # do this to remove probability if it doesnt perfectly fit in match
+                            break
+                    for slot in range(min(len(timeAlt), len(outputs[j][0]))):
+                        if timeAlt[slot] in outputs[j][0][slot].keys():
+                            probAddAlt += outputs[j][0][slot][timeAlt[slot]]
+                        else:
+                            probAddAlt = 0
+                            break
+
+                    # Double assurance for non values
+                    probAdd = max(probAdd, 0)
+                    probAddAlt = max(probAddAlt, 0)
+
+                    probability += probAdd + probAddAlt
+                    logging.info("Time Probability: %s, %s, %lf",
+                                 time, timeAlt, probability)
+
+                # Deciding best decision
+                if probability > bestProb:
+                    if ":" in time:
+                        bestTime = time
+                    else:
+                        bestTime = timeAlt
+                    bestProb = probability
+
     return (bestTime, bestProb, False)
 
 
