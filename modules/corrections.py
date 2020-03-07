@@ -370,7 +370,7 @@ def matchPurpose(image, threshold=0.3):
     pass
 
 
-def correctValue(image, column, threshold=0.3):
+def correctValue(image, column, threshold=-1):
     """This function is how we get accurate values from the images in each dictionary.\n
     @param {cvimg} image: The image that is being transcribed.\n
     @param {int} column: The column in the table that the image is in. This is very important as its part of how the translator corrects the outputs.\n
@@ -381,7 +381,9 @@ def correctValue(image, column, threshold=0.3):
     The last step is for it take all the new unique strings and run them through another function to see which names the strings closest resemble. The name with the most conclusions is considered the best guess.\n
     However, the best guess may not be accepted if the name doesnt share enough characters in common with all the guesses, then its scrapped and nothing is returned.
     """
-
+    thr = 0
+    if not (threshold == -1):
+        thr = threshold
     # Running initial checks to see if cell is empty
     # were creating an inverted thresh of the image for counting pixels, removes 8px border in case it includes external lines or table borders
     invert = cv2.cvtColor(image[8: -8, 8: -8], cv2.COLOR_BGR2GRAY)
@@ -434,11 +436,11 @@ def correctValue(image, column, threshold=0.3):
     ##########################
 
     if (column == 1):
-        return matchName(outputs)
+        return matchName(outputs, threshold=thr)
     elif(column == 2 or column == 3):
-        return matchTime(outputs)
+        return matchTime(outputs, threshold=thr)
     elif (column == 4):
-        return matchHour(outputs)
+        return matchHour(outputs, threshold=thr)
     elif(column == 5):
-        return matchPurpose(outputs)
+        return matchPurpose(outputs, threshold=thr)
     return ("NaN", 0, False)
