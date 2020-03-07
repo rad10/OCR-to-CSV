@@ -436,9 +436,9 @@ def correctValue(image, column, threshold=0.3):
     if (column == 1):
         return matchName(outputs)
     elif(column == 2 or column == 3):
-        return matchTime()
+        return matchTime(outputs)
     elif (column == 4):
-        return matchHour()
+        return matchHour(outputs)
     elif(column == 5):
-        return matchPurpose()
+        return matchPurpose(outputs)
     return ("NaN", 0, False)
