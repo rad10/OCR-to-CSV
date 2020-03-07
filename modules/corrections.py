@@ -255,7 +255,37 @@ def matchName(outputs: list, threshold=0.0):
     return (bestName, bestProb, False)
 
 
-def matchTime(outputs: list, threshold=0.3):
+def mult(iterater, start=0):
+    """Multiplies all values in iterable, starting at start and returns the value
+    """
+    multiply = 1
+    for i in range(len(iterater), start):
+        multiply *= iterater[i]
+    return multiply
+
+
+def getCombo(iterator: list, start: int = 0, end: int = -1):
+    results = []
+    if(end == -1):
+        end = len(iterator)
+
+    if(start == end - 1):
+        return list(iterator[start].keys())
+
+    if(start == 0):
+        for i in iterator[start].keys():
+            for j in getCombo(iterator, start + 1, end):
+                if bool(timeFilter.matches(str(i + j))) or str(i + j).isdigit() or str(i + j).isdecimal():
+                    results.append(str(i + j))
+        return results
+
+    for i in iterator[start].keys():
+        for j in getCombo(iterator, start + 1, end):
+            results.append(str(i + j))
+    return results
+
+
+def matchTime(outputs: list, threshold=0.0):
     ###
     ## Enriching Data ##
     ###
@@ -264,14 +294,31 @@ def matchTime(outputs: list, threshold=0.3):
     bestTime = "Nan"
     bestProb = 0
 
-    for i in range(3):
+    for i in range(2, -1, -1):
         outputs[i] = addMissing(outputs[i], "d")  # adds alternate digits
 
+        # Checking if size constraints are correct
+        if ((len(outputs[i]) > 1) or (
+                # if its a size less than 3, then itll never be a time
+                len(outputs[i][0]) < 3) or (
+                    # if colon in middle, then
+                    len(outputs[i][0]) < 4 and ":" in outputs[i][0][-3]) or (
+                        len(outputs[i][0]) > 4 and not ":" in outputs[i][0][-3]) or (
+                            len(outputs[i][0]) > 5)):
+            print("Failed size")
+            for char in outputs[i][0]:
+                print(char)
+            print(len(outputs[i][0]))
+            outputs.pop(i)
+            # return ("Nan", 0, False)
+
+    for i in range(len(outputs)):
         # Removing any letters in dictionary
-        for char in list(outputs[i][0].keys()):
-            if not char.isdigit() and char != ":":
-                # if the key isnt a number or a colon, then remove it
-                del outputs[i][0][char]
+        for slot in range(len(outputs[i][0])):
+            for char in list(outputs[i][0][slot].keys()):
+                if not char.isdigit() and char != ":":
+                    # if the key isnt a number or a colon, then remove it
+                    del outputs[i][0][slot][char]
         ###
         # Calculating Probability
         ###
@@ -279,13 +326,40 @@ def matchTime(outputs: list, threshold=0.3):
         charlen = [None]*len(outputs[i][0])  # lengths of each individual char
         time = [""] * len(outputs[i][0])  # make string size of array
         for char in range(len(outputs[i])):
-            probSize *= len(outputs[i][word])
-            charlen[word] = len(outputs[i][word])
+            probSize *= len(outputs[i][0][char])
+            charlen[char] = len(outputs[i][0][char])
 
         # Now for the ultimate factorial calculation
         for j in range(probSize):
-            for k in range(len(charlen)):
-                time[k] = outputs[i][0]
+            probability = 0
+
+            # Precaution incase math isnt correct
+            if(j // mult(charlen, 1) >= charlen[0]):
+                break
+
+            # Cycles through position of characters
+            for pos in range(len(charlen)):
+
+                symb = list(outputs[i][0][pos].keys())[(
+                    j // mult(charlen, pos + 1)) % charlen[pos]]
+                time[pos] = symb
+                probability += outputs[i][0][pos][symb]
+
+            # check if its a valid time
+            if(bool(timeFilter.match(time))):
+                pass
+            elif (time.isdigit() or time.isdecimal()):
+                # Add colon to decimal number
+                time = time[:-2] + ":" + time[-2:]
+                probability += 0.5
+            if (probability > bestProb):
+                bestTime = time
+                bestProb = probability
+            print(time, probability)
+    print(bestTime, bestProb)
+    if (bestProb / len(bestTime) >= threshold):
+        return (bestTime, bestProb, True)
+    return (bestTime, bestProb, False)
 
 
 def matchHour(image, threshold=0.3):
