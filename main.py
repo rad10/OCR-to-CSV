@@ -310,10 +310,8 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
                 logging.info("Sheet[%d]: [%d, %d]", int(
                     sheetInd), int(rowInd), int(col))
                 temp = correctValue(row[col], col)
-                if(temp == None):  # the correction failed. the user must return the correction
-                    temp = "RequestCorrection"
                 results[-1][-1].append(temp)
-            if(results[-1][-1].count("") == len(results[-1][-1])):
+            if(results[-1][-1].count(("", 0, True)) == len(results[-1][-1])):
                 results[-1].pop(-1)
             else:
                 results[-1][-1].extend(dates)
@@ -323,18 +321,18 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
         # Iterating through results to see where errors occured
         for row in range(len(results[-1])):
             for col in range(len(results[-1][row][:-len(dates)])):
-                if (results[-1][row][col][0:18] == "RequestCorrection:"):
+                if (results[-1][row][col][2] == False):
                     results[-1][row][col] = requestCorrection(
-                        sheet[-1][row + 1][col + 1], col + 1, results[-1][row][col][18:])
+                        sheet[-1][row + 1][col + 1], col + 1, results[-1][row][col][0])
                     if (col + 1 in [1, 5]):
                         for entry in JSON["names"][str(col + 1)]:
-                            if (results[-1][row][col].lower() == entry):
+                            if (results[-1][row][col][0].lower() == entry):
                                 break
                         else:
                             JSONChange = True
                             # if the name possibly entered in by the user doesnt exist in the database, add it
                             JSON["names"][str(
-                                col + 1)].append(results[-1][row][col].lower())
+                                col + 1)].append(results[-1][row][col][0].lower())
     if(outputDict == None):
         return results
     else:
@@ -350,8 +348,8 @@ def arrayToCsv(directory):
     cvarray = ''
     for i in range(len(directory)):
         for e in range(len(directory[i])-1):
-            cvarray += (directory[i][e]+",")
-        cvarray += (directory[i][-1]+"\n")
+            cvarray += (directory[i][e][0]+",")
+        cvarray += (directory[i][-1][0]+"\n")
     logging.debug("cvarray:\n%s", cvarray)
     return (cvarray+"\n")
 
