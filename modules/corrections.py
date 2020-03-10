@@ -285,7 +285,6 @@ def matchTime(outputs: list, threshold=0.0):
                 print(char)
             print(len(outputs[i][0]))
             outputs.pop(i)
-            # return ("Nan", 0, False)
 
     for i in range(len(outputs)):
         # Removing any letters in dictionary
@@ -302,12 +301,11 @@ def matchTime(outputs: list, threshold=0.0):
         # Permutating through all combos in the list
         for timed in product(*outputs[i][0]):
             # building the time string
-            time = ""
+            time = "".join(timed)
             probability = 0
             probabilityAddition = 0
             # print(timed)
             for cnum in range(len(timed)):
-                time += timed[cnum]
                 probability += outputs[i][0][cnum][timed[cnum]]
 
             logging.debug("Time: %s - %lf", time, probability)
