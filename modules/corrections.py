@@ -505,8 +505,10 @@ def correctValue(image, column, threshold=-1):
     However, the best guess may not be accepted if the name doesnt share enough characters in common with all the guesses, then its scrapped and nothing is returned.
     """
     thr = 0
+    # Default settings for threshold
     if not (threshold == -1):
         thr = threshold
+
     # Running initial checks to see if cell is empty
     # were creating an inverted thresh of the image for counting pixels, removes 8px border in case it includes external lines or table borders
     invert = cv2.cvtColor(image[8: -8, 8: -8], cv2.COLOR_BGR2GRAY)
