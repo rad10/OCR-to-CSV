@@ -245,11 +245,11 @@ def requestCorrection(displayImage, col, guess=""):
     if(guessButton):
         guessButton = False
         submitButton = False
-        return guess
+        return (guess, 100, True)
     elif(submitButton):
         guessButton = False
         submitButton = False
-        return result
+        return (result, 100, True)
 
 
 def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
