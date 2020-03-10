@@ -241,6 +241,8 @@ def matchName(outputs: list, threshold=0.0):
             # Calculation for exactly two words
             # separate first and last name and evaluate
             elif (len(output) == 2):
+                if not " " in name:
+                    continue  # skip any names with no spaces
                 namep = name.split(" ", 2)
                 for word in range(2):
                     for char in range(min(len(namep[word]), len(output[word]))):
