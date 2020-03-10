@@ -2,7 +2,7 @@ import logging
 import numpy as nm
 import cv2
 from pdf2image import convert_from_path
-import os
+from os.path import exists
 
 
 def collectContours(image):
@@ -20,7 +20,7 @@ def collectContours(image):
     invert = 255 - thresh
 
     if (logging.getLogger().level <= logging.DEBUG):
-        while(os.path.exists("debugOutput/scrapper/{ind}1invert.jpg".format(ind=debugIndex))):
+        while(exists("debugOutput/scrapper/{ind}1invert.jpg".format(ind=debugIndex))):
             debugIndex += 1
         cv2.imwrite(
             "debugOutput/scrapper/{ind}1invert.jpg".format(ind=debugIndex), invert)
@@ -98,7 +98,7 @@ def imageScraper(file, outputArray=None):
     debugIndex = 0
     if not (file.split(".")[1] in ["jpg", "jpeg", "png", "pdf"]):
         return
-    elif not (os.path.exists(file)):
+    elif not (exists(file)):
         raise FileNotFoundError("File given does not exist.")
     if file.split(".")[1] == "pdf":
         for image in convert_from_path(file):
