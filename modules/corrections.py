@@ -535,7 +535,7 @@ def correctValue(image, column, threshold=-1):
     if(pixelCount/pixelTotal <= 0.01):
         logging.info("It's Blank")
         # Skipping ahead if its already looking like theres nothing
-        return ("", "", True)
+        return ("", 0, True)
     del invert, pixelCount, pixelTotal
 
     outputs = [None] * 3
