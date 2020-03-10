@@ -429,8 +429,68 @@ def matchHour(outputs: list, threshold=0.3):
     return (bestHour, bestProb + bestAlt, False)
 
 
-def matchPurpose(image, threshold=0.3):
-    pass
+def matchPurpose(outputs: list, threshold=0.3):
+    tempPurpose = ""
+    tempList = []
+    bestPurpose = ""
+    bestProb = 0
+    probability = 0
+
+    for i in range(len(outputs)):
+        outputs[i] = addMissing(outputs[i], "a")
+        outputs[i] = adjustResult(outputs[i])
+
+    # iterating through possible results
+    for output in outputs:
+        for purpose in JSON["names"]["5"]:
+            probability = 0
+
+            # Checking for 1 word purposes
+            if (len(output) == 1):
+                if " " in purpose:  # skip any purpose that isnt exactly one word
+                    continue
+                for slot in range(min(len(purpose), len(output[0]))):
+                    # if the character is in the same position
+                    if purpose[slot] in output[0][slot].keys():
+                        probability += output[0][slot][purpose[slot]]
+                    # if the character is in next position and none is currently available
+                    elif (None in output[0][slot].keys()) and (
+                            slot < len(output[0]) - 1) and purpose[slot] in output[0][slot + 1].keys():
+                        probability += output[0][slot + 1][purpose[slot]]
+                    # if the character is in next pos
+                    elif (slot < len(output[0]) - 1) and purpose[slot] in output[0][slot + 1].keys():
+                        probability += output[0][slot +
+                                                 1][purpose[slot]] * 0.75
+                    # if character is in previous position
+                    elif (slot > 0) and purpose[slot] in output[0][slot - 1].keys():
+                        probability += output[0][slot - 1][purpose[slot]] * 0.5
+                    else:  # if the character just doesnt exist
+                        probability += 0  # 0.25
+            else:  # for literally any other value
+                tempPurpose = purpose.replace(" ", "")
+                for li in output:
+                    tempList.extend(li)
+
+                for i in range(min(len(tempPurpose), len(tempList))):
+                    if tempPurpose[i] in tempList[i].keys():
+                        probability += tempList[i][tempPurpose[i]]
+                    elif tempPurpose[i].upper() in tempList[i].keys():
+                        probability += tempList[i][tempPurpose[i].upper()]
+                    elif (i < len(tempList) - 1) and tempPurpose[i] in tempList[i + 1].keys():
+                        probability += tempList[i + 1][tempPurpose[i]] * 0.75
+                    elif (i > 0) and tempPurpose[i] in tempList[i - 1].keys():
+                        probability += tempList[i - 1][tempPurpose[i]] * 0.5
+                    else:
+                        probability += 0  # 0.25
+
+            logging.debug("MatchPurpose %s: %lf", purpose, probability)
+            if(probability > bestProb):
+                bestPurpose = purpose
+                bestProb = probability
+    logging.info("MatchPurpose Best: %s %lf", bestPurpose, bestProb)
+    if (bestProb/len(bestPurpose.replace(" ", "")) >= threshold):
+        return (bestPurpose, bestProb, True)
+    return (bestPurpose, bestProb, False)
 
 
 def correctValue(image, column, threshold=-1):
