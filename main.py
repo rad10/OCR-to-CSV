@@ -293,9 +293,9 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
             dstr = tess.image_to_string(date).replace(
                 "\n", "").replace(" ", "")
             if (bool(dformat.match(dstr))):
-                dates.insert(0, dstr)
+                dates.insert(0, (dstr, 1, True))
             else:
-                dates.append(dstr)
+                dates.append((dstr, 1, True))
 
         # | Full name | Time in | Time out | hours (possibly blank) | purpose | date | day (possibly blank) |
         for row in sheet[-1][1:]:  # skips first row which is dummy
