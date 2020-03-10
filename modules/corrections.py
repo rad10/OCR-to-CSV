@@ -55,6 +55,10 @@ timeFilter = re.compile(
 
 
 def parseHocr(html):
+    """ Scraped string of hOCR html text to get the outputs organized into nested lists and dictionaries\n
+    @param html: a string containing the hOCR content\n
+    @return a list of lists and dictionary based on the results of the hOCR
+    """
     results = []
     words = []
     chars = []
@@ -116,6 +120,16 @@ def parseHocr(html):
 
 
 def addMissing(resultArr, key):
+    """ Takes values in a given hOCR Output and adds in characters that arent present that could have been mistaken
+    for another character. For example, a "4" could have been mistaken for an "A". The probability of the new 
+    characters are the same as the highest probability of a similiar character.\n
+    @param resultArr: The output array from an hOCR output
+    @param key: This is a string that decides which dictionary to check from.\n
+    "a" represents alphabet\n
+    "d" represents digits\n
+    based on which one you choose wil decide what additions will be considered.\n
+    @return an array similar to resultArr, but with any found similar characters in there given positions.
+    """
     prob = 0
     for word in range(len(resultArr)):  # iterates through words in hocr
         # iterates between each character
@@ -134,6 +148,13 @@ def addMissing(resultArr, key):
 
 
 def adjustResult(resultArr):
+    """ This function specifically affects hOCR outputs that include alphabeticall letters.
+    It iterates through the output and makes everything lowercase for better matching. If 
+    both the uppercase and lowercase form of a letter exist, then it will go with the highest 
+    probability for the lowercase value.\n
+    @param resultArr: The hOCR output to be lowered.\n
+    @return an output similar to resultArr, but all characters are lowercase.
+    """
     for i in range(len(resultArr)):  # iterates through all words
         # iterates through character positions
         for char in range(len(resultArr[i])):
@@ -157,17 +178,12 @@ def adjustResult(resultArr):
 
 
 def matchName(outputs: list, threshold=0.0):
-    """This function is how we get accurate values from the images in each dictionary.\n
-    @param {cvimg} image: The image that is being transcribed.\n
-    @param {int} column: The column in the table that the image is in. This is very important as its part of how the translator corrects the outputs.\n
+    """This function is how we get accurate values from the images in each dictionary. This one in particular tries to match output to a specific name.\n
+    @param {list} outputs: The list object that comes from parsing the hOCR output of 3 objects.\n
     @param {double} threshold: Optional variable. Changes the percentage of characters that need to match the origional of it to return. Higher threshholds mean more strict requirements and higher chance of getting nothing. Lower threshholds mean higher chance to get a value that may or may not be incorrect.\n
-    @returns: It will return the name that closest resembles the image, or it will return \"RequestCorrection:\" if no name could be accepted.\n
-    It works by taking an image and running tesseract to get the value from the unchanges color image, then it grabs the ocr output from the same image with different effects, such as greyscale, thresholds, and contrast increase.\n
-    The next step for it is to take each unique value make, then run it through another function that creates a new string with the characters in it resembling what should be in there (no numbers or symbols in names, no chars in numbers, etc.) and adds it to the pile of strings.\n
-    The last step is for it take all the new unique strings and run them through another function to see which names the strings closest resemble. The name with the most conclusions is considered the best guess.\n
-    However, the best guess may not be accepted if the name doesnt share enough characters in common with all the guesses, then its scrapped and nothing is returned.
+    @returns: {tuple} it returns a tuple containing the expected name, the probability of that name being true, and a bool discussing whether it passed the threshold.
     """
-    for i in range(3):  # Iterating through all outputs
+    for i in range(len(outputs)):  # Iterating through all outputs
         outputs[i] = addMissing(outputs[i], "a")
         outputs[i] = adjustResult(outputs[i])
 
@@ -268,6 +284,11 @@ def matchName(outputs: list, threshold=0.0):
 
 
 def matchTime(outputs: list, threshold=0.0):
+    """This function is how we get accurate values from the images in each dictionary. This one in particular tries to match output to a specific time.\n
+    @param {list} outputs: The list object that comes from parsing the hOCR output of 3 objects.\n
+    @param {double} threshold: Optional variable. Changes the percentage of characters that need to match the origional of it to return. Higher threshholds mean more strict requirements and higher chance of getting nothing. Lower threshholds mean higher chance to get a value that may or may not be incorrect.\n
+    @returns: {tuple} it returns a tuple containing the expected name, the probability of that name being true, and a bool discussing whether it passed the threshold.
+    """
     ####################
     ## Enriching Data ##
     ####################
@@ -383,8 +404,13 @@ def matchTime(outputs: list, threshold=0.0):
 
 
 def matchHour(outputs: list, threshold=0.3):
+    """This function is how we get accurate values from the images in each dictionary. This one in particular tries to match output to a number that represents the amount of hours there.\n
+    @param {list} outputs: The list object that comes from parsing the hOCR output of 3 objects.\n
+    @param {double} threshold: Optional variable. Changes the percentage of characters that need to match the origional of it to return. Higher threshholds mean more strict requirements and higher chance of getting nothing. Lower threshholds mean higher chance to get a value that may or may not be incorrect.\n
+    @returns: {tuple} it returns a tuple containing the expected name, the probability of that name being true, and a bool discussing whether it passed the threshold.
+    """
     hour = ""
-    bestHour = "Nan"
+    bestHour = ""
     probability = 0
     altProb = 0
     bestProb = 0
@@ -441,6 +467,11 @@ def matchHour(outputs: list, threshold=0.3):
 
 
 def matchPurpose(outputs: list, threshold=0.3):
+    """This function is how we get accurate values from the images in each dictionary. This one in particular tries to match output to a specific prupose.\n
+    @param {list} outputs: The list object that comes from parsing the hOCR output of 3 objects.\n
+    @param {double} threshold: Optional variable. Changes the percentage of characters that need to match the origional of it to return. Higher threshholds mean more strict requirements and higher chance of getting nothing. Lower threshholds mean higher chance to get a value that may or may not be incorrect.\n
+    @returns: {tuple} it returns a tuple containing the expected purpose, the probability of that name being true, and a bool discussing whether it passed the threshold.
+    """
     tempPurpose = ""
     tempList = []
     bestPurpose = "Nan"
