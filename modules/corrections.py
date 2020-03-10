@@ -371,8 +371,62 @@ def matchTime(outputs: list, threshold=0.0):
     return (bestTime, bestProb + bestAltProb, False)
 
 
-def matchHour(image, threshold=0.3):
-    pass
+def matchHour(outputs: list, threshold=0.3):
+    # Refining the selection
+    hour = ""
+    bestHour = ""
+    probability = 0
+    altProb = 0
+    bestProb = 0
+    bestAlt = 0
+
+    for i in range(len(outputs)):
+        addMissing(outputs[i], "d")
+
+        # Removing non int values
+        for slot in range(len(outputs[i][0])):
+            for char in list(outputs[i][0][slot].keys()):
+                if not (char.isdigit() or char.isdecimal()):
+                    del outputs[i][0][slot][char]
+
+    # Calculations
+    for i in range(len(outputs)):
+        for hourd in product(*outputs[i][0]):
+            hour = "".join(hourd)
+            probability = 0
+            altProb = 0
+
+            if not (hour.isdigit() or hour.isdecimal()):
+                continue
+
+            # Building hour string
+            for char in range(len(hourd)):
+                probability += outputs[i][0][char][hourd[char]]
+
+            if (hour.isdigit() or hour.isdecimal()):
+                for j in range(len(outputs)):
+                    temp = 0
+                    if i == j:
+                        continue
+                    for char in range(min(len(hour), len(outputs[j][0]))):
+                        if char in outputs[j][0][char]:
+                            temp += outputs[j][0][char]
+                        else:
+                            temp = 0
+                            break
+                    altProb += temp
+
+                logging.info("Hour %s: %lf %lf = %lf", hour,
+                             probability, altProb, probability + altProb)
+                # Deciding best one
+                if (probability + altProb > bestProb + bestAlt and probability > bestProb):
+                    bestHour = hour
+                    bestProb = probability
+                    bestAlt = altProb
+
+    if (bestProb + bestAlt > bestProb * len(outputs) * threshold):
+        return (bestHour, bestProb + bestAlt, True)
+    return (bestHour, bestProb + bestAlt, False)
 
 
 def matchPurpose(image, threshold=0.3):
