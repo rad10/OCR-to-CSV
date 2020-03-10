@@ -60,8 +60,12 @@ def parseHocr(html):
     chars = []
 
     # Remove XML Namespace for my own sanity
-    html = html.replace(
-        b'<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">', b'<html lang="en">')
+    try:
+        html = html.replace(
+            b'<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">', b'<html lang="en">')
+    except TypeError:
+        html = html.replace(
+            "<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">", "<html lang=\"en\">")
 
     root = ET.fromstring(html)
     # body.div.div.p.span#line_1_1
