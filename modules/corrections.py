@@ -372,7 +372,6 @@ def matchTime(outputs: list, threshold=0.0):
 
 
 def matchHour(outputs: list, threshold=0.3):
-    # Refining the selection
     hour = ""
     bestHour = ""
     probability = 0
@@ -380,8 +379,9 @@ def matchHour(outputs: list, threshold=0.3):
     bestProb = 0
     bestAlt = 0
 
+    # Refining the selection
     for i in range(len(outputs)):
-        addMissing(outputs[i], "d")
+        outputs[i] = addMissing(outputs[i], "d")
 
         # Removing non int values
         for slot in range(len(outputs[i][0])):
