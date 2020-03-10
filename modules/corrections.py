@@ -196,7 +196,7 @@ def matchName(outputs: list, threshold=0.0):
 
     tempName = ""
     tempList = []
-    bestName = ""
+    bestName = "Nan"
     bestProb = 0
     probability = 0
     for name in JSON["names"]["1"]:
@@ -268,9 +268,9 @@ def matchName(outputs: list, threshold=0.0):
 
 
 def matchTime(outputs: list, threshold=0.0):
-    ###
+    ####################
     ## Enriching Data ##
-    ###
+    ####################
     time = ""
     timeAlt = ""
     probability = 0
@@ -384,7 +384,7 @@ def matchTime(outputs: list, threshold=0.0):
 
 def matchHour(outputs: list, threshold=0.3):
     hour = ""
-    bestHour = ""
+    bestHour = "Nan"
     probability = 0
     altProb = 0
     bestProb = 0
@@ -443,7 +443,7 @@ def matchHour(outputs: list, threshold=0.3):
 def matchPurpose(outputs: list, threshold=0.3):
     tempPurpose = ""
     tempList = []
-    bestPurpose = ""
+    bestPurpose = "Nan"
     bestProb = 0
     probability = 0
 
