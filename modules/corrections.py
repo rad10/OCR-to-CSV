@@ -278,6 +278,8 @@ def matchName(outputs: list, threshold=0.0):
                 bestName = name
                 bestProb = probability
     logging.info("MatchName Best: %s %lf", bestName, bestProb)
+    if (bestName == "Nan"):
+        return (bestName, bestProb, False)
     if (bestProb/len(bestName.replace(" ", "")) >= threshold):
         return (bestName, bestProb, True)
     return (bestName, bestProb, False)
@@ -530,6 +532,9 @@ def matchPurpose(outputs: list, threshold=0.3):
                 bestPurpose = purpose
                 bestProb = probability
     logging.info("MatchPurpose Best: %s %lf", bestPurpose, bestProb)
+
+    if (bestPurpose == "Nan"):
+        return (bestPurpose, bestProb, False)
     if (bestProb/len(bestPurpose.replace(" ", "")) >= threshold):
         return (bestPurpose, bestProb, True)
     return (bestPurpose, bestProb, False)
