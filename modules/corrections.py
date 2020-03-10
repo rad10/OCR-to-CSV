@@ -584,20 +584,25 @@ def correctValue(image, column, threshold=-1):
     elif column in [2, 3, 4]:
         conf = "--dpi 300 -c lstm_choice_mode=2 -c hocr_char_boxes=1 --psm 8"
 
-    # Get normal results
-    outputs[0] = parseHocr(tess.image_to_pdf_or_hocr(
-        image, lang="eng", extension="hocr", config=conf))
+    # Safety net incase tesseract breaks for no reason
+    try:
+        # Get normal results
+        outputs[0] = parseHocr(tess.image_to_pdf_or_hocr(
+            image, lang="eng", extension="hocr", config=conf))
 
-    # Get black and white results
-    temp = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    outputs[1] = parseHocr(tess.image_to_pdf_or_hocr(
-        temp, lang="eng", extension="hocr", config=conf))
+        # Get black and white results
+        temp = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        outputs[1] = parseHocr(tess.image_to_pdf_or_hocr(
+            temp, lang="eng", extension="hocr", config=conf))
 
-    # get thresh results
-    temp = cv2.threshold(
-        temp, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
-    outputs[2] = parseHocr(tess.image_to_pdf_or_hocr(
-        temp, lang="eng", extension="hocr", config=conf))
+        # get thresh results
+        temp = cv2.threshold(
+            temp, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
+        outputs[2] = parseHocr(tess.image_to_pdf_or_hocr(
+            temp, lang="eng", extension="hocr", config=conf))
+    except tess.pytesseract.TesseractError:
+        logging.error("Tesseract Error")
+        return ("Nan", 0, False)
 
     # quick check incase box is looking empty; will only skip if 2/3 or more are blank
     if(not (bool(outputs[0]) or bool(outputs[1]) or bool(outputs[2]))):
