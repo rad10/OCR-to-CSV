@@ -447,6 +447,9 @@ def main():
         json.dump(JSON, JSONFile, indent=4, separators=(
             ",", ": "), ensure_ascii=True, sort_keys=True)
         JSONFile.close()
+
+    # Cleaning old ocr files from tmp
+    os.system("del /s /q %tmp%\\tess_*.hocr")
     return
 
 
