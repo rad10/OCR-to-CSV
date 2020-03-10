@@ -68,8 +68,15 @@ def parseHocr(html):
             "<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">", "<html lang=\"en\">")
 
     root = ET.fromstring(html)
-    # body.div.div.p.span#line_1_1
-    base = root[1][0][0][0][0]  # Ends at span#line_1_1
+
+    try:
+        # body.div.div.p.span#line_1_1
+        base = root[1][0][0][0][0]  # Ends at span#line_1_1
+    except IndexError:
+        base = root.find("body/div/div/p/span")
+        if base == None:
+            logging.error("Error: couldnt follow tree properly")
+            return [[]]
 
     # Allocating space for all words
     words = [a for a in base if "id" in a.attrib and "word_" in a.attrib["id"]]
