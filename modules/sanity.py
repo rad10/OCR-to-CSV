@@ -1,4 +1,11 @@
 def sanityName(results: list):
+    """ This function checks the databases names captured. It checks
+    if the name exists multiple times. If it does, it maintains the validity
+    of the most accurate name and sets the rest to incorrect to be either
+    scanned again or get a request from the user.
+    @param results: The entire database to be checked for duplicate names
+    @return the database itself if it isnt modified by reference
+    """
     dupeNames = []
     bestChoice = 0  # The index of the best choice amongst the duplicate names
     bestProb = 0  # the probability of the best choice
