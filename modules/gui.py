@@ -15,24 +15,42 @@ class mainGUI:
     submitButton = False
 
     # GUI Components
-    root = tkinter.Tk(screenName="OCR To CSV Interpreter")
-    decision = tkinter.BooleanVar(root)
-    inputFile = tkinter.Button(root)
-    outputFile = tkinter.Button(root)
-    labelImage = tkinter.Label(root)
-    errorLabel = tkinter.Label(root)
-    confidenceDescription = tkinter.Label(root)
-    AIGuess = tkinter.Button(root)
-    orLabel = tkinter.Label(root)
-    correctionEntry = tkinter.Entry(root)
-    submit = tkinter.Button(root)
+    root = None
+    decision = None
+    inputFile = None
+    outputFile = None
+    labelImage = None
+    errorLabel = None
+    confidenceDescription = None
+    AIGuess = None
+    orLabel = None
+    correctionEntry = None
+    submit = None
 
     # Status bars
-    sheetStatus = tkinter.Label(root, text="Sheet: 0 of 0")
-    rowStatus = tkinter.Label(root, text="Row: 0 of 0")
-    progressBar = ttk.Progressbar(root)
+    sheetStatus = None
+    rowStatus = None
+    progressBar = None
 
     def __init__(self):
+        # Init GUI Components
+        self.root = tkinter.Tk(screenName="OCR To CSV Interpreter")
+        self.decision = tkinter.BooleanVar(self.root)
+        self.inputFile = tkinter.Button(self.root)
+        self.outputFile = tkinter.Button(self.root)
+        self.labelImage = tkinter.Label(self.root)
+        self.errorLabel = tkinter.Label(self.root)
+        self.confidenceDescription = tkinter.Label(self.root)
+        self.AIGuess = tkinter.Button(self.root)
+        self.orLabel = tkinter.Label(self.root)
+        self.correctionEntry = tkinter.Entry(self.root)
+        self.submit = tkinter.Button(self.root)
+
+        # Status bars
+        self.sheetStatus = tkinter.Label(self.root, text="Sheet: 0 of 0")
+        self.rowStatus = tkinter.Label(self.root, text="Row: 0 of 0")
+        self.progressBar = ttk.Progressbar(self.root)
+
         self.root.title("OCR To CSV Interpreter")
         self.root.geometry("600x450+401+150")
         self.root.configure(background="#d9d9d9")
@@ -202,13 +220,17 @@ class mainGUI:
 
 class PopupTag:
     # GUI Components
-    popupBox = tkinter.Toplevel()
-    popupDescription = tkinter.Text(popupBox)
-    popupOK = tkinter.Button(popupBox)
+    popupBox = None
+    popupDescription = None
+    popupOK = None
     top = None
 
     def __init__(self, top, title, text, color="#000000"):
         self.top = top
+
+        self.popupBox = tkinter.Toplevel()
+        self.popupDescription = tkinter.Text(self.popupBox)
+        self.popupOK = tkinter.Button(self.popupBox)
 
         self.popupBox.geometry("335x181+475+267")
         self.popupBox.minsize(120, 1)
@@ -252,19 +274,28 @@ class InstallError:
     text_description = "Warning: Youre missing {name}. it is a required software to make this tool run. To fix this issue, please follow the instructions below."
 
     # GUI Components
-    root = tkinter.Tk(baseName="Missing Software")
-    header = tkinter.Label(root)
-    description = tkinter.Label(root)
-    link = tkinter.Label(root)
-    orLabel = tkinter.Label(root)
-    location = tkinter.Label(root)
-    downloadLabel = tkinter.Button(root)
-    navigateLabel = tkinter.Button(root)
+    root = None
+    header = None
+    description = None
+    link = None
+    orLabel = None
+    location = None
+    downloadLabel = None
+    navigateLabel = None
 
     def __init__(self, name, URL, filename):
         self.name = name
         self.URL = URL
         self.fileName = filename
+
+        self.root = tkinter.Tk(baseName="Missing Software")
+        self.header = tkinter.Label(self.root)
+        self.description = tkinter.Label(self.root)
+        self.link = tkinter.Label(self.root)
+        self.orLabel = tkinter.Label(self.root)
+        self.location = tkinter.Label(self.root)
+        self.downloadLabel = tkinter.Button(self.root)
+        self.navigateLabel = tkinter.Button(self.root)
 
         self.root.title("Missing Software")
         self.root.geometry("438x478")
