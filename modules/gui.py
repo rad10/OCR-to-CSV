@@ -134,9 +134,11 @@ class mainGUI:
 
         self.progressBar.place(relx=0.017, rely=0.911, relwidth=0.95,
                                relheight=0.0, height=22)
-        self.root.mainloop()
 
     # GUI Functions
+
+    def run(self):
+        self.root.mainloop()
 
     def guessSwitch(self):
         self.guessButton = True
@@ -253,6 +255,7 @@ class PopupTag:
             highlightcolor="black", pady="0")
         self.popupOK.place(relx=0.328, rely=0.663, height=34, width=117)
 
+    def run(self):
         self.popupBox.mainloop()
 
     def end(self):
@@ -352,7 +355,10 @@ class InstallError:
             highlightbackground="#d9d9d9", highlightcolor="black", pady="0")
         self.navigateLabel.place(relx=0.16, rely=0.879, height=34, width=297)
 
+
+    def run(self):
         self.root.mainloop()
+
 
     def download(self):
         import webbrowser
