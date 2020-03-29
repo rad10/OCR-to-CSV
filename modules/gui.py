@@ -237,3 +237,109 @@ class PopupTag:
         self.popupBox.destroy()
         self.top.root.destroy()
 
+
+class InstallError:
+    # Variables
+    name = None
+    URL = None
+    fileName = None
+
+    # Fonts
+    font11 = "-family {Segoe UI} -size 18 -weight bold"
+    font13 = "-family {Segoe UI} -size 16 -weight bold"
+
+    # Text
+    text_description = "Warning: Youre missing {name}. it is a required software to make this tool run. To fix this issue, please follow the instructions below."
+
+    # GUI Components
+    root = tkinter.Tk(baseName="Missing Software")
+    header = tkinter.Label(root)
+    description = tkinter.Label(root)
+    link = tkinter.Label(root)
+    orLabel = tkinter.Label(root)
+    location = tkinter.Label(root)
+    downloadLabel = tkinter.Button(root)
+    navigateLabel = tkinter.Button(root)
+
+    def __init__(self, name, URL, filename):
+        self.name = name
+        self.URL = URL
+        self.fileName = filename
+
+        self.root.title("Missing Software")
+        self.root.geometry("438x478")
+        self.root.minsize(120, 1)
+        self.root.maxsize(1370, 749)
+        self.root.resizable(1, 1)
+        self.root.configure(background="#d9d9d9")
+
+        self.header.configure(text="Software Not Installed")
+        self.header.configure(
+            font=self.font11, activeforeground="#372fd7", background="#d9d9d9",
+            disabledforeground="#a3a3a3", foreground="#2432d9")
+        self.header.place(relx=0.16, rely=0.042, height=61, width=294)
+
+        self.header.configure(text=self.text_description.format(name=name))
+        self.description.configure(
+            font="-family {Segoe UI} -size 14", background="#ffffff",
+            disabledforeground="#a3a3a3", foreground="#000000", wraplength="294")
+        self.description.place(relx=0.16, rely=0.167, height=151, width=294)
+
+        self.link.configure(
+            text="If you havent already installed this software, please follow the download link.")
+        self.link.configure(
+            background="#eeeeee", disabledforeground="#a3a3a3", foreground="#000000",
+            wraplength="294")
+        self.link.place(relx=0.16, rely=0.523, height=31, width=294)
+
+        self.orLabel.configure(text="Or")
+        self.orLabel.configure(
+            font="-family {Segoe UI} -size 16 -weight bold",
+            background="#d9d9d9", disabledforeground="#a3a3a3", foreground="#29c1dc")
+        self.orLabel.place(relx=0.457, rely=0.69, height=36, width=40)
+
+        self.location.configure(
+            text="If you've already installed the software, please lead us to where it is as we cannot find it.")
+        self.location.configure(
+            background="#eeeeee", wraplength="294",
+            disabledforeground="#a3a3a3", foreground="#000000")
+        self.location.place(relx=0.16, rely=0.774, height=41, width=294)
+
+        self.downloadLabel.configure(
+            text="Download {name}".format(name=name), command=self.download)
+        self.downloadLabel.configure(
+            font=self.font11, activebackground="#ececec", activeforeground="#000000",
+            background="#48d250", disabledforeground="#a3a3a3", foreground="#000000",
+            highlightbackground="#d9d9d9", highlightcolor="black", pady="0")
+        self.downloadLabel.place(relx=0.16, rely=0.607, height=34, width=297)
+
+        self.navigateLabel.configure(
+            text="Navigate to {name}".format(name=name), command=self.navigate)
+        self.navigateLabel.configure(
+            font=self.font13, activebackground="#ececec", activeforeground="#000000",
+            background="#eaecec", disabledforeground="#a3a3a3", foreground="#000000",
+            highlightbackground="#d9d9d9", highlightcolor="black", pady="0")
+        self.navigateLabel.place(relx=0.16, rely=0.879, height=34, width=297)
+
+        self.root.mainloop()
+
+    def download(self):
+        import webbrowser
+        webbrowser.open(self.URL, autoraise=True)
+
+    def navigate(self):
+        from os import getenv, system
+        path = filedialog.askopenfilename(
+            filetypes=((self.name, self.fileName), (self.name, self.fileName)))
+        path = dirname(normpath(path))
+        if (getenv("path")[-1] != ";"):
+            path = ";" + path
+        if(len(getenv("path") + path) >= 1024):
+            self.description.configure(
+                text="Error: we could not add the file to your path for you. You will have to do this manually.")
+        if getenv("userprofile") in path:
+            if(system("setx PATH \"%path%" + path + "\"")):
+                print("Failed to do command")
+        else:
+            if(system("setx PATH /M \"%path%" + path + "\"")):
+                print("failed to do command")
