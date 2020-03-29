@@ -200,3 +200,40 @@ class mainGUI:
             return (result, 100, True)
 
 
+class PopupTag:
+    # GUI Components
+    popupBox = tkinter.Toplevel()
+    popupDescription = tkinter.Text(popupBox)
+    popupOK = tkinter.Button(popupBox)
+    top = None
+
+    def __init__(self, top, title, text, color="#000000"):
+        self.top = top
+
+        self.popupBox.geometry("335x181+475+267")
+        self.popupBox.minsize(120, 1)
+        self.popupBox.maxsize(1370, 749)
+        self.popupBox.resizable(1, 1)
+        self.popupBox.configure(background="#d9d9d9")
+        self.popupBox.title = title
+
+        self.popupDescription.insert("end", text)
+        self.popupDescription.configure(
+            foreground=color, wrap="word", state="disabled", background="#FFFFFF",
+            font="TkTextFont", highlightbackground="#d9d9d9", highlightcolor="black",
+            insertbackground="black", selectbackground="#c4c4c4", selectforeground="black")
+        self.popupDescription.place(
+            relx=0.03, rely=0.055, height=91, width=314)
+        self.popupOK.configure(text="OK", command=self.end)
+        self.popupOK.configure(
+            activebackground="#ececec", activeforeground="#000000", background="#ebebeb",
+            disabledforeground="#a3a3a3", foreground="#000000", highlightbackground="#d9d9d9",
+            highlightcolor="black", pady="0")
+        self.popupOK.place(relx=0.328, rely=0.663, height=34, width=117)
+
+        self.popupBox.mainloop()
+
+    def end(self):
+        self.popupBox.destroy()
+        self.top.root.destroy()
+
