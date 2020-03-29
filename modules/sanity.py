@@ -53,4 +53,15 @@ def checkSanity(results: list):
 
 
 def checkBlankRow(personRow: list):
-    pass
+    """ This function takes a name row and sees if theres enough information
+    to determine if the row has no information in it.\n
+    @param personRow the row to be determined whether or not its blank.\n
+    @return True if the row is blank and can be removed, False otherwise.\n
+    """
+    countConfirms = 1
+    countBlanks = 1
+    for i in personRow[:4]:
+        # and every one. any false will 0 the entire thing
+        countConfirms *= i[2]
+        countBlanks *= (i[0] == '')
+    return countConfirms and countBlanks
