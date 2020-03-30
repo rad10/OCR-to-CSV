@@ -1,28 +1,25 @@
-# import this library to automatically download and install the rest of the libraries if they do not exist
-import re
 import json
 import logging
-from modules.imageScraper import imageScraper
-from modules.corrections import correctValue, connectDict, JSON
-from modules.gui import mainGUI, InstallError, PopupTag
-from modules.sanity import checkBlankRow, sanityName
-# if opencv isnt installed, it'll install it for you
-from sys import argv
 import os
+import re
+
+from modules.corrections import JSON, connectDict, correctValue
+from modules.gui import InstallError, PopupTag, mainGUI
+from modules.imageScraper import imageScraper
+from modules.sanity import checkBlankRow, sanityName
+
+# if opencv isnt installed, it'll install it for you
 try:
     import numpy as nm
     import cv2
 except ImportError:
     if(os.system("pip install opencv-python")):
         os.system("pip install --user opencv-python")
-    import numpy as nm
-    import cv2
 try:
     from PIL import Image, ImageTk
 except ModuleNotFoundError:
     if(os.system("pip install pillow")):
         os.system("pip install --user pillow")
-    from PIL import Image, ImageTk
 except ImportError:
     import Image
     import ImageTk
