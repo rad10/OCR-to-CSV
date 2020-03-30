@@ -30,7 +30,6 @@ class mainGUI:
 
     # Status bars
     sheetStatus = None
-    rowStatus = None
     progressBar = None
 
     def __init__(self, cmd=None):
@@ -49,8 +48,7 @@ class mainGUI:
         self.submit = tkinter.Button(self.root)
 
         # Status bars
-        self.sheetStatus = tkinter.Label(self.root, text="Sheet: 0 of 0")
-        self.rowStatus = tkinter.Label(self.root, text="Row: 0 of 0")
+        self.sheetStatus = tkinter.Label(self.root)
         self.progressBar = ttk.Progressbar(self.root)
 
         self.root.title("OCR To CSV Interpreter")
@@ -132,14 +130,8 @@ class mainGUI:
         self.sheetStatus.configure(
             activebackground="#f9f9f9", activeforeground="black", background="#d9d9d9",
             disabledforeground="#a3a3a3", foreground="#000000", highlightbackground="#d9d9d9",
-            highlightcolor="black")
-        self.sheetStatus.place(relx=0.017, rely=0.844, height=21, width=94)
-
-        self.rowStatus.configure(
-            activebackground="#f9f9f9", activeforeground="black", background="#d9d9d9",
-            disabledforeground="#a3a3a3", foreground="#000000", highlightbackground="#d9d9d9",
-            highlightcolor="black")
-        self.rowStatus.place(relx=0.217, rely=0.844, height=21, width=64)
+            highlightcolor="black", anchor="w")
+        self.sheetStatus.place(relx=0.033, rely=0.844, height=21, width=554)
 
         self.progressBar.place(relx=0.017, rely=0.911, relwidth=0.95,
                                relheight=0.0, height=22)
