@@ -69,9 +69,16 @@ elif "debug" in os.sys.argv:
     else:
         os.system("del /s debugOutput\\*.jpg")
 
-JSON_FILE = open("./aliases.json", "r")
-connect_dict(json.load(JSON_FILE))
-JSON_FILE.close()
+try:
+    JSON_FILE = open("./aliases.json", "r")
+except FileNotFoundError:
+    JSON_FILE = open("./aliases.json", "w")
+    JSON_FILE.write("{\n\"names\": {\n\"1\": [],\n\"5\": []\n}\n}")
+    JSON_FILE.close()
+    JSON_FILE = open("./aliases.json", "r")
+finally:
+    connect_dict(json.load(JSON_FILE))
+    JSON_FILE.close()
 JSON_CHANGE = False  # this is only used when the database is updated
 Main_Display = None
 
