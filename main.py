@@ -5,6 +5,7 @@ import logging
 from modules.imageScraper import imageScraper
 from modules.corrections import correctValue, connectDict, JSON
 from modules.gui import mainGUI, InstallError, PopupTag
+from modules.sanity import checkBlankRow, sanityName
 # if opencv isnt installed, it'll install it for you
 from sys import argv
 import os
@@ -125,7 +126,8 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
     """
     global JSON
     global JSONChange
-    results = []
+    results = [[] for x in sheetsDict]  # results the size of pages in dict
+
     # GUI widgets to manipulate while in middle of function
     if(gui):
         sheetMax = len(sheetsDict)
@@ -133,24 +135,26 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
         rowInd = 0
         progressMax = 1
 
+        # Gui Texts
+        textScan = "Scanning\tSheet: {sInd} of {sMax}\tRow: {rInd} of {rMax}"
+        textSanitize = "Sanitizing\tSheet: {sInd} of {sMax}\tRow: {rInd} of {rMax}"
+
         # Getting max for progress bar
         for sheet in sheetsDict:
             progressMax += len(sheet[-1]) - 1
         mainDisplay.progressBar.configure(
             mode="determinate", maximum=progressMax)
-    for sheet in sheetsDict:
-        results.append([])
+
+    # Collecting data to database
+    for sheet in range(len(sheetsDict)):
         if gui:
             sheetInd += 1
-            rowMax = len(sheet[-1]) - 1
-            mainDisplay.sheetStatus.configure(
-                text="Sheet: " + str(sheetInd) + " of " + str(sheetMax))
-
+            rowMax = len(sheetsDict[sheet][-1]) - 1
         # Collecting dates on page first
         dates = []
         dformat = re.compile(r'\d{1,2}\/\d{1,2}\/(\d{4}|\d{2})')
         dstr = ""
-        for date in sheet[:-1]:
+        for date in sheetsDict[sheet][:-1]:
             dstr = tess.image_to_string(date).replace(
                 "\n", "").replace(" ", "")
             if (bool(dformat.match(dstr))):
@@ -159,41 +163,54 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
                 dates.append((dstr, 1, True))
 
         # | Full name | Time in | Time out | hours (possibly blank) | purpose | date | day (possibly blank) |
-        for row in sheet[-1][1:]:  # skips first row which is dummy
+        # skips first row which is dummy
+        for row in range(1, len(sheetsDict[sheet][-1])):
             if gui:
                 rowInd += 1
                 mainDisplay.progressBar.step()
-                mainDisplay.rowStatus.configure(
-                    text="Row: " + str(rowInd) + " of " + str(rowMax))
+                mainDisplay.sheetStatus.configure(
+                    text=textScan.format(sInd=sheetInd, sMax=sheetMax, rInd=rowInd, rMax=rowMax))
                 mainDisplay.root.update_idletasks()
-            results[-1].append([])
-            for col in range(1, len(row)):  # skip first col which is dummy
+            results[sheet].append([None for x in range(5)])  # array of 5 slots
+            # skip first col which is dummy
+            for col in range(1, len(sheetsDict[sheet][-1][row])):
                 logging.info("Sheet[%d]: [%d, %d]", int(
                     sheetInd), int(rowInd), int(col))
-                temp = correctValue(row[col], col)
-                results[-1][-1].append(temp)
-            if(results[-1][-1].count(("", 0, True)) == len(results[-1][-1])):
-                results[-1].pop(-1)
-            else:
-                results[-1][-1].extend(dates)
+                results[sheet][row - 1][col -
+                                        1] = correctValue(sheetsDict[sheet][-1][row][col], col)
+            results[sheet][-1].extend(dates)
         if (logging.getLogger().level <= logging.DEBUG):
             for e in range(len(results)):
                 debug("Results Sheet[" + str(e) + "]", results[e])
+
+    # Checking names for repetitions
+    results = sanityName(results)
+
+    # Analysis
+    for sheet in range(len(results)):
         # Iterating through results to see where errors occured
-        for row in range(len(results[-1])):
-            for col in range(len(results[-1][row][:-len(dates)])):
-                if (results[-1][row][col][2] == False):
-                    results[-1][row][col] = mainDisplay.requestCorrection(
-                        sheet[-1][row + 1][col + 1], col + 1, results[-1][row][col][0])
+        for row in range(len(results[sheet])):
+            for col in range(len(results[sheet][row][:-len(dates)])):
+                mainDisplay.sheetStatus.configure(
+                    text=textSanitize.format(sInd=sheet + 1, sMax=len(results), rInd=row + 1, rMax=len(results[sheet])))
+                if (results[sheet][row][col][2] == False):
+                    results[sheet][row][col] = mainDisplay.requestCorrection(
+                        sheetsDict[sheet][-1][row + 1][col + 1], col + 1, results[sheet][row][col][0])
                     if (col + 1 in [1, 5]):
                         for entry in JSON["names"][str(col + 1)]:
-                            if (results[-1][row][col][0].lower() == entry):
+                            if (results[sheet][row][col][0].lower() == entry):
                                 break
                         else:
                             JSONChange = True
                             # if the name possibly entered in by the user doesnt exist in the database, add it
                             JSON["names"][str(
-                                col + 1)].append(results[-1][row][col][0].lower())
+                                col + 1)].append(results[sheet][row][col][0].lower())
+
+        # Checking if any rows are blank
+        for row in range(len(results[sheet])-1, -1, -1):
+            if checkBlankRow(results[sheet][row]):
+                results[sheet].pop(row)
+
     if(outputDict == None):
         return results
     else:
