@@ -19,6 +19,7 @@ class mainGUI:
     decision = None
     inputFile = None
     outputFile = None
+    start = None
     labelImage = None
     errorLabel = None
     confidenceDescription = None
@@ -32,12 +33,13 @@ class mainGUI:
     rowStatus = None
     progressBar = None
 
-    def __init__(self):
+    def __init__(self, cmd=None):
         # Init GUI Components
         self.root = tkinter.Tk(screenName="OCR To CSV Interpreter")
         self.decision = tkinter.BooleanVar(self.root)
         self.inputFile = tkinter.Button(self.root)
         self.outputFile = tkinter.Button(self.root)
+        self.start = tkinter.Button(self.root)
         self.labelImage = tkinter.Label(self.root)
         self.errorLabel = tkinter.Label(self.root)
         self.confidenceDescription = tkinter.Label(self.root)
@@ -74,6 +76,13 @@ class mainGUI:
             highlightcolor="black", pady="0")
         self.outputFile.place(relx=0.033, rely=0.156, height=34, width=157)
 
+        self.start.configure(text="Start", command=cmd)
+        self.start.configure(
+            activebackground="#ececec", activeforeground="#000000", background="#17a252",
+            disabledforeground="#a3a3a3", foreground="#ffffff", highlightbackground="#d9d9d9",
+            highlightcolor="black", pady="0")
+        self.start.place(relx=0.033, rely=0.256, height=34, width=157)
+
         self.labelImage.configure(text="No corrections required yet.")
         self.labelImage.configure(
             background="#e6e6e6", disabledforeground="#a3a3a3", foreground="#000000")
@@ -83,7 +92,7 @@ class mainGUI:
             wraplength=224, activebackground="#f9f9f9", activeforeground="black",
             background="#e1e1e1", disabledforeground="#a3a3a3", foreground="#ff0000",
             highlightbackground="#d9d9d9", highlightcolor="black")
-        self.errorLabel.place(relx=0.017, rely=0.267, height=111, width=224)
+        self.errorLabel.place(relx=0.017, rely=0.356, height=71, width=224)
 
         self.confidenceDescription.configure(
             activebackground="#f9f9f9", activeforeground="black", background="#d9d9d9",
@@ -355,10 +364,8 @@ class InstallError:
             highlightbackground="#d9d9d9", highlightcolor="black", pady="0")
         self.navigateLabel.place(relx=0.16, rely=0.879, height=34, width=297)
 
-
     def run(self):
         self.root.mainloop()
-
 
     def download(self):
         import webbrowser
