@@ -136,13 +136,13 @@ def imageScraper(file, outputArray=None):
         mainBoxes.remove(table)
 
         # making images for date and day
-        sheets.append([])
+        sheets.append([[], []])
         for x, y, w, h in mainBoxes:
-            sheets[-1].append(image[y:y+h, x:x+w])
+            sheets[-1][0].append(image[y:y+h, x:x+w])
 
         # Checking if dates are text and not random images
-        for i in range(len(sheets[-1]) - 1, -1, -1):
-            date = sheets[-1][i]
+        for i in range(len(sheets[-1][0]) - 1, -1, -1):
+            date = sheets[-1][0][i]
             tempDate = cv2.cvtColor(date, cv2.COLOR_BGR2GRAY)
             tempDate = cv2.threshold(
                 tempDate, 230, 255, cv2.THRESH_BINARY_INV)[1]
@@ -150,7 +150,7 @@ def imageScraper(file, outputArray=None):
             totalPixel = tempDate.shape[0] * tempDate.shape[1]
             # if the space filled is not between 1%-20%, then its a dud
             if(blackPixel/totalPixel <= 0.01 or blackPixel/totalPixel >= 0.20):
-                sheets[-1].pop(i)
+                sheets[-1][0].pop(i)
 
         #########################################
         # Phase 2: Collecting pairs for mapping #
@@ -279,17 +279,17 @@ def imageScraper(file, outputArray=None):
         #####################################
         # Phase 3: Time for actual Scraping #
         #####################################
-        sheets[-1].append([])
+
         # the dictionary thatll hold all our information
-        dictionary = sheets[-1][-1]
         dictRow = 0
         for row in horizontalPairs:
-            dictionary.append([])
+            sheets[-1][1].append([])
             for col in verticlePairs:
-                dictionary[dictRow].append(table[row[0]:row[1], col[0]:col[1]])
+                sheets[-1][1][dictRow].append(table[row[0]:row[1], col[0]:col[1]])
                 if (logging.getLogger().level <= logging.DEBUG):
-                    cv2.imwrite("debugOutput/dictionary/raw/table{}{}.jpg".format(dictRow,
-                                                                                  col[1]-col[0]), table[row[0]:row[1], col[0]:col[1]])
+                    cv2.imwrite(
+                        "debugOutput/dictionary/raw/table{}{}.jpg".format(
+                            dictRow, col[1]-col[0]), table[row[0]:row[1], col[0]:col[1]])
             dictRow += 1
 
     if(outputArray == None):
