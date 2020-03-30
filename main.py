@@ -1,8 +1,4 @@
 # import this library to automatically download and install the rest of the libraries if they do not exist
-import tkinter
-from tkinter import filedialog, ttk
-from math import floor
-from time import sleep
 import re
 import json
 import logging
@@ -46,76 +42,6 @@ except ImportError:
     from pdf2image import convert_from_path
 
 # Checking that external software is installed and ready to use
-
-
-def installError(name, URL, filename):
-    def download():
-        import webbrowser
-        webbrowser.open(URL, autoraise=True)
-
-    def navigate():
-        path = filedialog.askopenfilename(
-            filetypes=((name, filename), (name, filename)))
-        if(os.getenv("path")[-1] != ";"):
-            path = ";" + path
-        path = path.replace("/", "\\").replace("\\" + filename, "")
-        if(len(os.getenv("path") + path) >= 1024):
-            info0.configure(
-                text="Error: we could not add the file to your path for you. You will have to do this manually.")
-        if os.getenv("userprofile") in path:
-            if(os.system("setx PATH \"%path%" + path + "\"")):
-                print("Failed to do command")
-        else:
-            if(os.system("setx PATH /M \"%path%" + path + "\"")):
-                print("failed to do command")
-
-    ie = tkinter.Tk(baseName="Missing Software")
-    ie.title("Missing Software")
-    ie.geometry("438x478")
-    ie.minsize(120, 1)
-    ie.maxsize(1370, 749)
-    ie.resizable(1, 1)
-    ie.configure(background="#d9d9d9")
-    font11 = "-family {Segoe UI} -size 18 -weight bold"
-    font13 = "-family {Segoe UI} -size 16 -weight bold"
-    Header = tkinter.Label(ie, text="Software Not Installed")
-    Header.place(relx=0.16, rely=0.042, height=61, width=294)
-    Header.configure(font=font11, activeforeground="#372fd7", background="#d9d9d9",
-                     disabledforeground="#a3a3a3", foreground="#2432d9")
-    info0 = tkinter.Label(
-        ie, text="Warning: Youre missing {name}. it is a required software to make this tool run. To fix this issue, please follow the instructions below.".format(name=name))
-    info0.place(relx=0.16, rely=0.167, height=151, width=294)
-    info0.configure(font="-family {Segoe UI} -size 14", background="#ffffff",
-                    disabledforeground="#a3a3a3", foreground="#000000", wraplength="294")
-    info1 = tkinter.Label(
-        ie, text="If you havent already installed this software, please follow the download link.")
-    info1.place(relx=0.16, rely=0.523, height=31, width=294)
-    info1.configure(background="#eeeeee", disabledforeground="#a3a3a3",
-                    foreground="#000000", wraplength="294")
-    tor = tkinter.Label(ie, text="Or")
-    tor.place(relx=0.457, rely=0.69, height=36, width=40)
-    tor.configure(font="-family {Segoe UI} -size 16 -weight bold",
-                  background="#d9d9d9", disabledforeground="#a3a3a3", foreground="#29c1dc")
-    info2 = tkinter.Label(
-        ie, text="If you've already installed the software, please lead us to where it is as we cannot find it.")
-    info2.place(relx=0.16, rely=0.774, height=41, width=294)
-    info2.configure(background="#eeeeee", wraplength="294",
-                    disabledforeground="#a3a3a3", foreground="#000000")
-    download = tkinter.Button(
-        ie, text="Download {name}".format(name=name), command=download)
-    download.place(relx=0.16, rely=0.607, height=34, width=297)
-    download.configure(font=font11, activebackground="#ececec", activeforeground="#000000", background="#48d250",
-                       disabledforeground="#a3a3a3", foreground="#000000", highlightbackground="#d9d9d9", highlightcolor="black", pady="0")
-    navigate = tkinter.Button(
-        ie, text="Navigate to {name}".format(name=name), command=navigate)
-    navigate.place(relx=0.16, rely=0.879, height=34, width=297)
-    navigate.configure(font=font13, activebackground="#ececec", activeforeground="#000000", background="#eaecec",
-                       disabledforeground="#a3a3a3", foreground="#000000", highlightbackground="#d9d9d9", highlightcolor="black", pady="0")
-
-    ie.mainloop()
-    os.sys.exit(1)
-
-
 # check if tesseract exists
 if os.system("tesseract --help"):
     if os.path.exists("C:\\Program Files\\Tesseract-OCR\\tesseract.exe"):
@@ -189,69 +115,6 @@ def appendToFile(dir, content):
         open(dir, "w").write(content)
 
 
-def requestCorrection(displayImage, col, guess=""):
-    """This is the function used when a string doesnt confidently match a name.\n
-    @param displayImage: The image placed on the display for user to see.\n
-    @param {int} col: The column number that the image was found in. This is needed for placing the AI's guess.\n
-    @param {string} guess: This is to straight up overwrite the AI's guess with the string. This can be helpful so that the AI doesnt have to process the image again.\n
-    @return: the users answer.
-    """
-    global labelImage
-    global errorLabel
-    global confidenceDescription
-    global AIGuess
-    global guessButton
-    global orLabel
-    global correctionEntry
-    global submitButton
-
-    result = ""  # the string to be returned for final answer
-
-    # Setting up image to place in GUI
-    image = Image.fromarray(displayImage)
-    if(displayImage.shape[1] > labelImage.winfo_width()):
-        hgt, wth = displayImage.shape[:2]
-        ratio = labelImage.winfo_width()/wth
-        image = image.resize(
-            (floor(wth * ratio), floor(hgt * ratio)), Image.ANTIALIAS)
-    image = ImageTk.PhotoImage(image)
-
-    # setting values to labels in gui
-    labelImage.configure(image=image)
-    labelImage.image = image
-    errorLabel.configure(
-        text="Uh oh. It looks like we couldnt condifently decide who or what this is. We need you to either confirm our guess or type in the correct value")
-    confidenceDescription.configure(text="Were not confident, but is it:")
-    AIGuess.configure(text=guess)
-    orLabel.configure(text="or")
-
-    # basically waits till user presses a button and changes variable scope
-    root.update_idletasks()
-    root.wait_variable(decision)
-    result = correctionEntry.get()
-
-    # Resetting changes made
-    labelImage.configure(image=None)
-    labelImage.image = None
-    errorLabel.configure(text="")
-    confidenceDescription.configure(text="")
-    AIGuess.configure(text="")
-    orLabel.configure(text="")
-    correctionEntry.delete(0, "end")
-    root.update_idletasks()
-    sleep(1)
-    decision.set(0)
-
-    if(guessButton):
-        guessButton = False
-        submitButton = False
-        return (guess, 100, True)
-    elif(submitButton):
-        guessButton = False
-        submitButton = False
-        return (result, 100, True)
-
-
 def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
     """ Phase two of plan. This function goes through the image dictionary passed 
     to it and creates a matrix of the dictionary in text.\n
@@ -265,9 +128,6 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
     results = []
     # GUI widgets to manipulate while in middle of function
     if(gui):
-        global sheetStatus
-        global rowStatus
-        global progressBar
         sheetMax = len(sheetsDict)
         sheetInd = 0
         rowInd = 0
@@ -355,70 +215,10 @@ def arrayToCsv(directory):
     return (cvarray+"\n")
 
 
-# Gui Variables
-signinsheet = ""
-outputCSV = os.getenv("userprofile").replace(
-    "\\", "/") + "/Documents/signinSheetOutput.csv"
-guessButton = False
-submitButton = False
-# Gui Functions
-
-
-def reconfigOutput():
-    global outputCSV
-    global outputFile
-    outputCSV = filedialog.askopenfilename(filetypes=(
-        ("Comma Style Values", "*.csv"), ("Comma Style Values", "*.csv")))
-    if(outputCSV != ""):
-        outputFile.configure(text=outputCSV.split("/")[-1])
-
-
-def guessSwitch():
-    global guessButton
-    guessButton = True
-    decision.set(1)
-
-
-def submitSwitch(event=None):
-    global submitButton
-    if(event != None and correctionEntry.get() == ""):
-        return
-    submitButton = True
-    decision.set(1)
-
-
-def popupTag(title, text, color="#000000"):
-    # Popup box for errors and completion
-    def end():
-        popupBox.destroy()
-        root.destroy()
-    popupBox = tkinter.Toplevel()
-    popupBox.geometry("335x181+475+267")
-    popupBox.minsize(120, 1)
-    popupBox.maxsize(1370, 749)
-    popupBox.resizable(1, 1)
-    popupBox.configure(background="#d9d9d9")
-    popupBox.title = title
-
-    popupDescription = tkinter.Text(popupBox)
-    popupDescription.insert("end", text)
-    popupDescription.configure(foreground=color, wrap="word", state="disabled", background="#FFFFFF", font="TkTextFont", highlightbackground="#d9d9d9", highlightcolor="black", insertbackground="black",
-                               selectbackground="#c4c4c4", selectforeground="black")
-    popupDescription.place(relx=0.03, rely=0.055, height=91, width=314)
-    popupOK = tkinter.Button(popupBox, text="OK", command=end)
-    popupOK.configure(activebackground="#ececec", activeforeground="#000000", background="#ebebeb",
-                      disabledforeground="#a3a3a3", foreground="#000000", highlightbackground="#d9d9d9", highlightcolor="black", pady="0")
-    popupOK.place(relx=0.328, rely=0.663, height=34, width=117)
-    popupBox.mainloop()
-
-
 def main():
     ##########################################
     ## Phase 3: Hooking everything together ##
     ##########################################
-    global signinsheet
-    global inputFile
-    global errorLabel
 
     try:
         signinsheet = mainDisplay.signinsheet
