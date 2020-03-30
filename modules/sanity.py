@@ -4,7 +4,7 @@ def sanityName(results: list):
     of the most accurate name and sets the rest to incorrect to be either
     scanned again or get a request from the user.\n
     @param results: The entire database to be checked for duplicate names\n
-    @return the database itself if it isnt modified by reference\n
+    @return the database itself if it isnt modified by reference
     """
     dupeNames = []
     bestChoice = 0  # The index of the best choice amongst the duplicate names
@@ -38,7 +38,7 @@ def sanityName(results: list):
 
     # setting it equal
     try:
-        globals["results"] = results
+        globals()["results"] = results
     except:
         pass
     return results
@@ -56,7 +56,7 @@ def checkBlankRow(personRow: list):
     """ This function takes a name row and sees if theres enough information
     to determine if the row has no information in it.\n
     @param personRow the row to be determined whether or not its blank.\n
-    @return True if the row is blank and can be removed, False otherwise.\n
+    @return True if the row is blank and can be removed, False otherwise.
     """
     countConfirms = 1
     countBlanks = 1

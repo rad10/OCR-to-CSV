@@ -123,7 +123,7 @@ def addMissing(resultArr, key):
     """ Takes values in a given hOCR Output and adds in characters that arent present that could have been mistaken
     for another character. For example, a "4" could have been mistaken for an "A". The probability of the new 
     characters are the same as the highest probability of a similiar character.\n
-    @param resultArr: The output array from an hOCR output
+    @param resultArr: The output array from an hOCR output\n
     @param key: This is a string that decides which dictionary to check from.\n
     "a" represents alphabet\n
     "d" represents digits\n

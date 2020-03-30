@@ -8,6 +8,9 @@ from PIL import Image, ImageTk
 
 
 class mainGUI:
+    """ This is the GUI that is used for the entire program. Everything is based
+    off of this GUI. Any changes here will reflect directly on the program.
+    """
     # Gui Variables
     signinsheet = ""
     outputCSV = normpath(expanduser("~\\Documents\\signinSheetOutput.csv"))
@@ -139,19 +142,23 @@ class mainGUI:
     # GUI Functions
 
     def run(self):
+        """ This starts the GUI """
         self.root.mainloop()
 
     def guessSwitch(self):
+        """ Switches decision switch towards the guess """
         self.guessButton = True
         self.decision.set(1)
 
     def submitSwitch(self, event=None):
+        """ Switches the decision switch towards what is submitted """
         if(event != None and self.correctionEntry.get() == ""):
             return
         self.submitButton = True
         self.decision.set(1)
 
     def reconfigOutput(self):
+        """ Changes the output CSV used """
         outputCSV = filedialog.askopenfilename(filetypes=(
             ("Comma Style Values", "*.csv"), ("Comma Style Values", "*.csv")))
         if(outputCSV != ""):
@@ -159,6 +166,7 @@ class mainGUI:
             self.outputCSV = outputCSV
 
     def reconfigInput(self):
+        """ Changes the input PDF used """
         signinsheet = filedialog.askopenfilename(filetypes=(
             ("PDF Files", "*.pdf"), ("Jpeg Files", "*.jpg"), ("Png Files", "*.png")))
         if(signinsheet != ""):
@@ -168,8 +176,11 @@ class mainGUI:
     def requestCorrection(self, displayImage, guess=""):
         """This is the function used when a string doesnt confidently match a name.\n
         @param displayImage: The image placed on the display for user to see.\n
-        @param {int} col: The column number that the image was found in. This is needed for placing the AI's guess.\n
-        @param {string} guess: This is to straight up overwrite the AI's guess with the string. This can be helpful so that the AI doesnt have to process the image again.\n
+        @param {int} col: The column number that the image was found in. This is needed
+        for placing the AI's guess.\n
+        @param {string} guess: This is to straight up overwrite the AI's guess with the
+        string. This can be helpful so that the AI doesnt have to process the image
+        again.\n
         @return: the users answer.
         """
 
@@ -222,6 +233,10 @@ class mainGUI:
 
 
 class PopupTag:
+    """ This GUI is designed to popup for the main GUI and give various information.
+    It is sometimes used for displaying Errors to the user. It is also used for
+    confirming completion of work for the user.
+    """
     # GUI Components
     popupBox = None
     popupDescription = None
@@ -257,14 +272,20 @@ class PopupTag:
         self.popupOK.place(relx=0.328, rely=0.663, height=34, width=117)
 
     def run(self):
+        """ This starts the GUI """
         self.popupBox.mainloop()
 
     def end(self):
+        """ This closes the popup and the GUI tied to it """
         self.popupBox.destroy()
         self.top.root.destroy()
 
 
 class InstallError:
+    """ This GUI is only useful for aknowledging errors due to a necessary
+    program not being installed. This takes the name of the program as well
+    as the download URL for the program in order to provide it to the user.
+    """
     # Variables
     name = None
     URL = None
@@ -357,13 +378,20 @@ class InstallError:
         self.navigateLabel.place(relx=0.16, rely=0.879, height=34, width=297)
 
     def run(self):
+        """ This starts the GUI """
         self.root.mainloop()
 
     def download(self):
+        """ Runs command to open URL in users web browser """
         import webbrowser
         webbrowser.open(self.URL, autoraise=True)
 
     def navigate(self):
+        """ If the user has already installed the program, but the program
+        doesnt see it, it'll attempt to add the program to the user's path
+        so that the user doesnt have to explain where the program is every
+        time it is open.
+        """
         from os import getenv, system
         path = filedialog.askopenfilename(
             filetypes=((self.name, self.fileName), (self.name, self.fileName)))
