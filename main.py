@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import re
+from subprocess import call
 
 from modules.corrections import JSON, connect_dict, correct_value
 from modules.gui import InstallError, MainGUI, PopupTag
@@ -13,13 +14,13 @@ try:
     import numpy as nm
     import cv2
 except ImportError:
-    if os.system("pip install opencv-python"):
-        os.system("pip install --user opencv-python")
+    if call(["pip", "install", "opencv-python"], shell=True):
+        call(["pip", "install", "--user", "opencv-python"], shell=True)
 try:
     from PIL import Image, ImageTk
 except ModuleNotFoundError:
-    if os.system("pip install pillow"):
-        os.system("pip install --user pillow")
+    if call(["pip", "install", "pillow"], shell=True):
+        call(["pip", "install", "--user", "pillow"], shell=True)
 except ImportError:
     import Image
     import ImageTk
@@ -28,27 +29,27 @@ except ImportError:
 try:
     import pytesseract as tess
 except ImportError:
-    if os.system("pip install pytesseract"):
-        os.system("pip install --user pytesseract")
+    if call(["pip", "install", "pytesseract"], shell=True):
+        call(["pip", "install", "--user", "pytesseract"], shell=True)
     import pytesseract as tess
 # installing pdf to image libraries
 try:
     from pdf2image import convert_from_path
 except ImportError:
-    if os.system("pip install pdf2image"):
-        os.system("pip install --user pdf2image")
+    if call(["pip install pdf2image"], shell=True):
+        call(["pip install --user pdf2image"], shell=True)
     from pdf2image import convert_from_path
 
 # Checking that external software is installed and ready to use
 # check if tesseract exists
-if os.system("tesseract --help"):
+if call(["tesseract", "--help"], shell=True):
     if os.path.exists("C:\\Program Files\\Tesseract-OCR\\tesseract.exe"):
         tess.pytesseract.tesseract_cmd = r'C:\\Program Files\\Tesseract-OCR\\tesseract'
     else:
         InstallError(
             "Tesseract", "https://github.com/UB-Mannheim/tesseract/releases", "tesseract.exe").run()
 # check if poppler exists
-if os.system("pdfimages -help"):
+if call(["pdfimages", "-help"], shell=True):
     InstallError("Poppler", "https://poppler.freedesktop.org/",
                  "pdfimages.exe").run()
 
@@ -67,7 +68,7 @@ elif "debug" in os.sys.argv:
         os.makedirs("debugOutput/dictionary", exist_ok=True)
         os.makedirs("debugOutput/scrapper", exist_ok=True)
     else:
-        os.system("del /s debugOutput\\*.jpg")
+        call(["del", "/s", "debugOutput\\*.jpg"], shell=True)
 
 try:
     JSON_FILE = open("./aliases.json", "r")
@@ -277,7 +278,7 @@ def main():
         JSON_file.close()
 
     # Cleaning old ocr files from tmp
-    os.system("del /s /q %tmp%\\tess_*.hocr")
+    call(["del", "/s", "/q", "%tmp%\\tess_*.hocr"], shell=True)
     return
 
 

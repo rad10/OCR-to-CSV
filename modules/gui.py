@@ -394,7 +394,8 @@ class InstallError:
         so that the user doesnt have to explain where the program is every
         time it is open.
         """
-        from os import getenv, system
+        from os import getenv
+        from subprocess import call
         path = filedialog.askopenfilename(
             filetypes=((self.name, self.file_name), (self.name, self.file_name)))
         path = dirname(normpath(path))
@@ -404,8 +405,8 @@ class InstallError:
             self.description.configure(
                 text="Error: we could not add the file to your path for you. You will have to do this manually.")
         if getenv("userprofile") in path:
-            if system("setx PATH \"%path%" + path + "\""):
+            if call(["setx", "PATH", '%path%' + path + '"'], shell=True):
                 print("Failed to do command")
         else:
-            if system("setx PATH /M \"%path%" + path + "\""):
+            if call(["setx", "PATH", "/M", '"%path%' + path + '"'], shell=True):
                 print("failed to do command")
