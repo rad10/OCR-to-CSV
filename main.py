@@ -31,14 +31,13 @@ try:
 except ImportError:
     if call(["pip", "install", "pytesseract"], shell=True):
         call(["pip", "install", "--user", "pytesseract"], shell=True)
-    import pytesseract as tess
+
 # installing pdf to image libraries
 try:
     from pdf2image import convert_from_path
 except ImportError:
     if call(["pip install pdf2image"], shell=True):
         call(["pip install --user pdf2image"], shell=True)
-    from pdf2image import convert_from_path
 
 # Checking that external software is installed and ready to use
 # check if tesseract exists
