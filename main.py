@@ -114,15 +114,23 @@ def debug_image_dictionary(diction):
 
 
 def export_to_file(file, content):
-    open(file, "w").write(content)
+    e_file = open(file, "w")
+    e_file.write(content)
+    e_file.close()
 
 
 def append_to_file(file, content):
+    inner_content = ""
     try:
-        inside = open(file, "r").read()
-        open(file, "w").write(inside + content)
-    except:
-        open(file, "w").write(content)
+        inside_file = open(file, "r")
+        inner_content = inside_file.read()
+        inside_file.close()
+    except FileNotFoundError:
+        inner_content = ""
+    finally:
+        outside_file = open(file, "w")
+        outside_file.write(inner_content + content)
+        outside_file.close()
 
 
 def translate_dictionary(sheets_dict, gui=False, output_dict=None):
