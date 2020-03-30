@@ -88,17 +88,17 @@ def debugImageDictionary(diction):
         debugOutput = "Sheet | SheetLen | TableRow | TableCol\n"
         for sheet in range(len(diction)):
             debugOutput += "{ind: 5d} | {slen: 8d} | {trow: 8d} | {tcol: 8d}\n".format(ind=sheet, slen=len(
-                diction[sheet]), trow=len(diction[sheet][-1]), tcol=len(diction[sheet][-1][0]))
+                diction[sheet]), trow=len(diction[sheet][1]), tcol=len(diction[sheet][1][0]))
         logging.info(debugOutput)
         exportToFile("debugOutput/dictionaryStats.txt", debugOutput)
         for sheet in range(len(diction)):
-            for dates in range(len(diction[sheet][:-1])):
+            for dates in range(len(diction[sheet][0])):
                 cv2.imwrite("debugOutput/dictionary/sheet{sheet}date{date}.jpg".format(
-                    sheet=sheet, date=dates), diction[sheet][dates])
-            for row in range(len(diction[sheet][-1])):
-                for col in range(len(diction[sheet][-1][row])):
+                    sheet=sheet, date=dates), diction[sheet][0][dates])
+            for row in range(len(diction[sheet][1])):
+                for col in range(len(diction[sheet][1][row])):
                     cv2.imwrite("debugOutput/dictionary/sheet{sheet}table{row}{col}.jpg".format(
-                        sheet=sheet, row=row, col=col), diction[sheet][-1][row][col])
+                        sheet=sheet, row=row, col=col), diction[sheet][1][row][col])
 
 
 def exportToFile(dir, content):
@@ -138,7 +138,7 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
 
         # Getting max for progress bar
         for sheet in sheetsDict:
-            progressMax += len(sheet[-1]) - 1
+            progressMax += len(sheet[1]) - 1
         mainDisplay.progressBar.configure(
             mode="determinate", maximum=progressMax)
 
@@ -146,12 +146,12 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
     for sheet in range(len(sheetsDict)):
         if gui:
             sheetInd += 1
-            rowMax = len(sheetsDict[sheet][-1]) - 1
+            rowMax = len(sheetsDict[sheet][1]) - 1
         # Collecting dates on page first
         dates = []
         dformat = re.compile(r'\d{1,2}\/\d{1,2}\/(\d{4}|\d{2})')
         dstr = ""
-        for date in sheetsDict[sheet][:-1]:
+        for date in sheetsDict[sheet][0]:
             dstr = tess.image_to_string(date).replace(
                 "\n", "").replace(" ", "")
             if (bool(dformat.match(dstr))):
@@ -161,7 +161,7 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
 
         # | Full name | Time in | Time out | hours (possibly blank) | purpose | date | day (possibly blank) |
         # skips first row which is dummy
-        for row in range(1, len(sheetsDict[sheet][-1])):
+        for row in range(1, len(sheetsDict[sheet][1])):
             if gui:
                 rowInd += 1
                 mainDisplay.progressBar.step()
@@ -170,11 +170,11 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
                 mainDisplay.root.update_idletasks()
             results[sheet].append([None for x in range(5)])  # array of 5 slots
             # skip first col which is dummy
-            for col in range(1, len(sheetsDict[sheet][-1][row])):
+            for col in range(1, len(sheetsDict[sheet][1][row])):
                 logging.info("Sheet[%d]: [%d, %d]", int(
                     sheetInd), int(rowInd), int(col))
                 results[sheet][row - 1][col -
-                                        1] = correctValue(sheetsDict[sheet][-1][row][col], col)
+                                        1] = correctValue(sheetsDict[sheet][1][row][col], col)
             results[sheet][-1].extend(dates)
         if (logging.getLogger().level <= logging.DEBUG):
             for e in range(len(results)):
@@ -192,7 +192,7 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
                     text=textSanitize.format(sInd=sheet + 1, sMax=len(results), rInd=row + 1, rMax=len(results[sheet])))
                 if (results[sheet][row][col][2] == False):
                     results[sheet][row][col] = mainDisplay.requestCorrection(
-                        sheetsDict[sheet][-1][row + 1][col + 1], results[sheet][row][col][0])
+                        sheetsDict[sheet][1][row + 1][col + 1], results[sheet][row][col][0])
                     if (col + 1 in [1, 5]):
                         for entry in JSON["names"][str(col + 1)]:
                             if (results[sheet][row][col][0].lower() == entry):
