@@ -165,7 +165,7 @@ class mainGUI:
             self.inputFile.configure(text=basename(signinsheet))
             self.signinsheet = signinsheet
 
-    def requestCorrection(self, displayImage, col, guess=""):
+    def requestCorrection(self, displayImage, guess=""):
         """This is the function used when a string doesnt confidently match a name.\n
         @param displayImage: The image placed on the display for user to see.\n
         @param {int} col: The column number that the image was found in. This is needed for placing the AI's guess.\n

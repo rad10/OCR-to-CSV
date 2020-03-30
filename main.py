@@ -195,7 +195,7 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
                     text=textSanitize.format(sInd=sheet + 1, sMax=len(results), rInd=row + 1, rMax=len(results[sheet])))
                 if (results[sheet][row][col][2] == False):
                     results[sheet][row][col] = mainDisplay.requestCorrection(
-                        sheetsDict[sheet][-1][row + 1][col + 1], col + 1, results[sheet][row][col][0])
+                        sheetsDict[sheet][-1][row + 1][col + 1], results[sheet][row][col][0])
                     if (col + 1 in [1, 5]):
                         for entry in JSON["names"][str(col + 1)]:
                             if (results[sheet][row][col][0].lower() == entry):
