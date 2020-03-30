@@ -11,7 +11,7 @@ def sanityName(results: list):
     bestProb = 0  # the probability of the best choice
     for page in range(len(results)):
         for i in range(len(results[page])):
-            if results[page][i][0][2] and results[i][0][0] != "":
+            if results[page][i][0][2] and results[page][i][0][0] != "":
                 bestChoice = i
                 bestProb = results[page][i][0][1]
                 dupeNames.clear()
