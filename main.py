@@ -8,7 +8,7 @@ import json
 import logging
 from modules.imageScraper import imageScraper
 from modules.corrections import correctValue, connectDict, JSON
-
+from modules.gui import mainGUI, InstallError, PopupTag
 # if opencv isnt installed, it'll install it for you
 from sys import argv
 import os
@@ -121,13 +121,12 @@ if os.system("tesseract --help"):
     if os.path.exists("C:\\Program Files\\Tesseract-OCR\\tesseract.exe"):
         tess.pytesseract.tesseract_cmd = r'C:\\Program Files\\Tesseract-OCR\\tesseract'
     else:
-        installError(
-            "Tesseract", "https://github.com/UB-Mannheim/tesseract/releases", "tesseract.exe")
+        InstallError(
+            "Tesseract", "https://github.com/UB-Mannheim/tesseract/releases", "tesseract.exe").run()
 # check if poppler exists
 if os.system("pdfimages -help"):
-    installError("Poppler", "https://poppler.freedesktop.org/",
-                 "pdfimages.exe")
-del installError
+    InstallError("Poppler", "https://poppler.freedesktop.org/",
+                 "pdfimages.exe").run()
 
 
 # Functions
@@ -150,6 +149,7 @@ JSONFile = open("./aliases.json", "r")
 connectDict(json.load(JSONFile))
 JSONFile.close()
 JSONChange = False  # this is only used when the database is updated
+mainDisplay = None
 
 
 def debug(label: str, content: list):
@@ -276,13 +276,14 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
         # Getting max for progress bar
         for sheet in sheetsDict:
             progressMax += len(sheet[-1]) - 1
-        progressBar.configure(mode="determinate", maximum=progressMax)
+        mainDisplay.progressBar.configure(
+            mode="determinate", maximum=progressMax)
     for sheet in sheetsDict:
         results.append([])
         if gui:
             sheetInd += 1
             rowMax = len(sheet[-1]) - 1
-            sheetStatus.configure(
+            mainDisplay.sheetStatus.configure(
                 text="Sheet: " + str(sheetInd) + " of " + str(sheetMax))
 
         # Collecting dates on page first
@@ -301,10 +302,10 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
         for row in sheet[-1][1:]:  # skips first row which is dummy
             if gui:
                 rowInd += 1
-                progressBar.step()
-                rowStatus.configure(
+                mainDisplay.progressBar.step()
+                mainDisplay.rowStatus.configure(
                     text="Row: " + str(rowInd) + " of " + str(rowMax))
-                root.update_idletasks()
+                mainDisplay.root.update_idletasks()
             results[-1].append([])
             for col in range(1, len(row)):  # skip first col which is dummy
                 logging.info("Sheet[%d]: [%d, %d]", int(
@@ -322,7 +323,7 @@ def TranslateDictionary(sheetsDict, gui=False, outputDict=None):
         for row in range(len(results[-1])):
             for col in range(len(results[-1][row][:-len(dates)])):
                 if (results[-1][row][col][2] == False):
-                    results[-1][row][col] = requestCorrection(
+                    results[-1][row][col] = mainDisplay.requestCorrection(
                         sheet[-1][row + 1][col + 1], col + 1, results[-1][row][col][0])
                     if (col + 1 in [1, 5]):
                         for entry in JSON["names"][str(col + 1)]:
@@ -420,24 +421,23 @@ def main():
     global errorLabel
 
     try:
-        signinsheet = filedialog.askopenfilename(filetypes=(
-            ("PDF Files", "*.pdf"), ("Jpeg Files", "*.jpg"), ("Png Files", "*.png")))
-        inputFile.configure(text=signinsheet.split("/")[-1])
+        signinsheet = mainDisplay.signinsheet
+        outputCSV = mainDisplay.outputCSV
         imageDictionary = imageScraper(signinsheet)
         debugImageDictionary(imageDictionary)
         textDictionary = TranslateDictionary(imageDictionary, gui=True)
         csvString = ""
         for sheet in textDictionary:
             csvString += arrayToCsv(sheet)
-        exportToFile(outputCSV, csvString)
-        errorLabel.configure(text="All finished.")
+        exportToFile(mainDisplay.outputCSV, csvString)
+        mainDisplay.errorLabel.configure(text="All finished.")
     except BaseException:
         import traceback
-        popupTag("Error", "Looks like something went wrong.\n" +
-                 str(os.sys.exc_info())+"\n"+str(traceback.format_exc()), "#ff0000")
+        PopupTag(mainDisplay, "Error", "Looks like something went wrong.\n" +
+                 str(os.sys.exc_info())+"\n"+str(traceback.format_exc()), "#ff0000").run()
         raise
-    popupTag(
-        "Done", "Congrats! its all finished.\nLook at your csv and see if it looks alright.")
+    PopupTag(mainDisplay, "Done",
+             "Congrats! its all finished.\nLook at your csv and see if it looks alright.").run()
     if (JSONChange):
         JSON["names"]["1"].sort()  # Sorting new libraries for optimization
         JSON["names"]["5"].sort()
@@ -451,78 +451,6 @@ def main():
     return
 
 
+mainDisplay = mainGUI(main)
 if __name__ == "__main__":
-    root = tkinter.Tk(screenName="OCR To CSV Interpreter")
-    root.title("OCR To CSV Interpreter")
-    root.geometry("600x450+401+150")
-    root.configure(background="#d9d9d9")
-    root.minsize(120, 1)
-    root.maxsize(1370, 749)
-    root.resizable(1, 1)
-
-    decision = tkinter.BooleanVar()
-
-    inputFile = tkinter.Button(root, text="Select Signin Sheet", command=main)
-    inputFile.configure(activebackground="#ececec", activeforeground="#000000", background="#d9d9d9",
-                        disabledforeground="#a3a3a3", foreground="#000000", highlightbackground="#d9d9d9", highlightcolor="black", pady="0")
-    inputFile.place(relx=0.033, rely=0.044, height=34, width=157)
-
-    outputFile = tkinter.Button(
-        root, text=outputCSV.split("/")[-1], command=reconfigOutput)
-    outputFile.configure(activebackground="#ececec", activeforeground="#000000", background="#d9d9d9",
-                         disabledforeground="#a3a3a3", foreground="#000000", highlightbackground="#d9d9d9", highlightcolor="black", pady="0")
-    outputFile.place(relx=0.033, rely=0.156, height=34, width=157)
-
-    labelImage = tkinter.Label(root, text="No corrections required yet.")
-    labelImage.configure(background="#e6e6e6",
-                         disabledforeground="#a3a3a3", foreground="#000000")
-    labelImage.place(relx=0.417, rely=0.022, height=221, width=314)
-
-    errorLabel = tkinter.Label(root)
-    errorLabel.configure(wraplength=224, activebackground="#f9f9f9", activeforeground="black", background="#e1e1e1",
-                         disabledforeground="#a3a3a3", foreground="#ff0000", highlightbackground="#d9d9d9", highlightcolor="black")
-    errorLabel.place(relx=0.017, rely=0.267, height=111, width=224)
-
-    confidenceDescription = tkinter.Label(root)
-    confidenceDescription.configure(activebackground="#f9f9f9", activeforeground="black", background="#d9d9d9",
-                                    disabledforeground="#a3a3a3", foreground="#000000", highlightbackground="#d9d9d9", highlightcolor="black")
-    confidenceDescription.place(relx=0.267, rely=0.556, height=31, width=164)
-
-    AIGuess = tkinter.Button(root, text="No guesses yet.", command=guessSwitch)
-    AIGuess.configure(activebackground="#ececec", activeforeground="#000000", background="#d9d9d9",
-                      disabledforeground="#a3a3a3", foreground="#000000", highlightbackground="#d9d9d9", highlightcolor="black", pady="0")
-    AIGuess.place(relx=0.55, rely=0.556, height=34, width=227)
-
-    orLabel = tkinter.Label(root)
-    orLabel.configure(activebackground="#f9f9f9", activeforeground="black", background="#d9d9d9",
-                      disabledforeground="#a3a3a3", foreground="#000000", highlightbackground="#d9d9d9", highlightcolor="black")
-    orLabel.place(relx=0.017, rely=0.689, height=31, width=64)
-
-    correctionEntry = tkinter.Entry(root)
-    correctionEntry.configure(background="white", disabledforeground="#a3a3a3", font="TkFixedFont", foreground="#000000",
-                              highlightbackground="#d9d9d9", highlightcolor="black", insertbackground="black", selectbackground="#c4c4c4", selectforeground="black")
-    correctionEntry.place(relx=0.133, rely=0.689, height=30, relwidth=0.557)
-
-    submit = tkinter.Button(root, text="Submit", command=submitSwitch)
-    submit.configure(activebackground="#ececec", activeforeground="#000000", background="#d9d9d9",
-                     disabledforeground="#a3a3a3", foreground="#000000", highlightbackground="#d9d9d9", highlightcolor="black", pady="0")
-    submit.place(relx=0.717, rely=0.689, height=34, width=127)
-    root.bind("<Return>", submitSwitch)
-
-    # Status bars
-    sheetStatus = tkinter.Label(root, text="Sheet: 0 of 0")
-    sheetStatus.configure(activebackground="#f9f9f9", activeforeground="black", background="#d9d9d9",
-                          disabledforeground="#a3a3a3", foreground="#000000", highlightbackground="#d9d9d9", highlightcolor="black")
-    sheetStatus.place(relx=0.017, rely=0.844, height=21, width=94)
-
-    rowStatus = tkinter.Label(root, text="Row: 0 of 0")
-    rowStatus.configure(activebackground="#f9f9f9", activeforeground="black", background="#d9d9d9",
-                        disabledforeground="#a3a3a3", foreground="#000000", highlightbackground="#d9d9d9", highlightcolor="black")
-    rowStatus.place(relx=0.217, rely=0.844, height=21, width=64)
-
-    progressBar = ttk.Progressbar(root)
-    progressBar.place(relx=0.017, rely=0.911, relwidth=0.95,
-                      relheight=0.0, height=22)
-
-    # Run main program
-    root.mainloop()
+    mainDisplay.run()
