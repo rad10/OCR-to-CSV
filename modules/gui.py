@@ -30,6 +30,7 @@ class MainGUI:
     or_label = None
     correction_entry = None
     submit = None
+    version_label = None
 
     # Status bars
     sheet_status = None
@@ -49,6 +50,7 @@ class MainGUI:
         self.or_label = tkinter.Label(self.root)
         self.correction_entry = tkinter.Entry(self.root)
         self.submit = tkinter.Button(self.root)
+        self.version_label = tkinter.Label(self.root)
 
         # Status bars
         self.sheet_status = tkinter.Label(self.root)
@@ -129,6 +131,10 @@ class MainGUI:
             highlightcolor="black", pady="0", command=self.submit_switch)
         self.submit.place(relx=0.717, rely=0.689, height=34, width=127)
         self.root.bind("<Return>", self.submit_switch)
+
+        self.version_label.configure(
+            anchor='w', background="#d9d9d9", disabledforeground="#a3a3a3", foreground="#000000")
+        self.version_label.place(relx=0.033, rely=0.8, height=21, width=134)
 
         self.sheet_status.configure(
             activebackground="#f9f9f9", activeforeground="black", background="#d9d9d9",

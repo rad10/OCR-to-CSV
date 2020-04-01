@@ -81,6 +81,7 @@ finally:
     JSON_FILE.close()
 JSON_CHANGE = False  # this is only used when the database is updated
 Main_Display = None
+VERSION = 1.75
 
 
 def debug(label: str, content: list):
@@ -291,4 +292,5 @@ def main():
 
 Main_Display = MainGUI(main)
 if __name__ == "__main__":
+    Main_Display.version_label.configure("Version: " + VERSION)
     Main_Display.run()
