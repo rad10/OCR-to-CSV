@@ -81,7 +81,7 @@ finally:
     JSON_FILE.close()
 JSON_CHANGE = False  # this is only used when the database is updated
 Main_Display = None
-VERSION = 1.75
+VERSION = 2.0
 
 
 def debug(label: str, content: list):
