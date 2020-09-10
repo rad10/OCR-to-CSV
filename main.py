@@ -292,5 +292,5 @@ def main():
 
 Main_Display = MainGUI(main)
 if __name__ == "__main__":
-    Main_Display.version_label.configure("Version: " + VERSION)
+    Main_Display.version_label.configure(text="Version: {0}".format(VERSION))
     Main_Display.run()
