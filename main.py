@@ -291,5 +291,22 @@ if __name__ == "__main__":
         else:
             call(["del", "/s", "debugOutput\\*.jpg"], shell=True)
 
+    # Adding help screen
+    elif os.sys.argv[1] in ["-h", "-help", "--help", "help"]:
+        print("""This is just a pseudo help screen. You normally run it not on
+        a terminal with any parameters. This will only matter to you if you need
+        to do any debugging or of the sense.""")
+        print("help\tPrints out this screen")
+        print("""info\tSets logging output to log all info values. This screen
+        is similiar to debugging, but gives far less data. It does not output a
+        gallery of what it can see nor does it give a comprehensive list of all
+        names and their probabilities of being the in the given field.""")
+        print("""debug\tDoes a whole debugging plan on the program and outputs
+        the most information. This will not only output important values in calculating
+        results of certain criteria, but will also form a image gallery of every
+        captured node that the program found. This will be valuable in knowing
+        what the application sees. If you're having trouble with the program or
+        are trying to see how well your signin sheet complies with the program's
+        rules, run this main program in debug mode.""")
     Main_Display.version_label.configure(text="Version: {0}".format(VERSION))
     Main_Display.run()
