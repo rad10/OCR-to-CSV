@@ -308,5 +308,6 @@ if __name__ == "__main__":
         what the application sees. If you're having trouble with the program or
         are trying to see how well your signin sheet complies with the program's
         rules, run this main program in debug mode.""")
+        exit()
     Main_Display.version_label.configure(text="Version: {0}".format(VERSION))
     Main_Display.run()
