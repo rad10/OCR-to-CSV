@@ -54,21 +54,6 @@ if call(["pdfimages", "-help"], shell=True):
 
 
 # Functions
-
-
-logging.getLogger().setLevel(logging.WARNING)
-if "info" in os.sys.argv:
-    logging.basicConfig(format="%(asctime)s: INFO %(message)s",
-                        datefmt="%H:%M:%S", level=logging.INFO)
-elif "debug" in os.sys.argv:
-    logging.basicConfig(format="%(asctime)s: DEBUG %(message)s",
-                        datefmt="%H:%M:%S", level=logging.DEBUG)
-    if not os.path.exists("debugOutput/."):
-        os.makedirs("debugOutput/dictionary", exist_ok=True)
-        os.makedirs("debugOutput/scrapper", exist_ok=True)
-    else:
-        call(["del", "/s", "debugOutput\\*.jpg"], shell=True)
-
 try:
     JSON_FILE = open("./aliases.json", "r")
 except FileNotFoundError:
@@ -292,5 +277,19 @@ def main():
 
 Main_Display = MainGUI(main)
 if __name__ == "__main__":
+    # Placing debugging in main
+    logging.getLogger().setLevel(logging.WARNING)
+    if "info" in os.sys.argv:
+        logging.basicConfig(format="%(asctime)s: INFO %(message)s",
+                            datefmt="%H:%M:%S", level=logging.INFO)
+    elif "debug" in os.sys.argv:
+        logging.basicConfig(format="%(asctime)s: DEBUG %(message)s",
+                            datefmt="%H:%M:%S", level=logging.DEBUG)
+        if not os.path.exists("debugOutput/."):
+            os.makedirs("debugOutput/dictionary", exist_ok=True)
+            os.makedirs("debugOutput/scrapper", exist_ok=True)
+        else:
+            call(["del", "/s", "debugOutput\\*.jpg"], shell=True)
+
     Main_Display.version_label.configure(text="Version: {0}".format(VERSION))
     Main_Display.run()
